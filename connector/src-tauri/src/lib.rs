@@ -9,6 +9,7 @@ mod host_fs;
 use host_fs::HostFsState;
 
 mod host_shell;
+mod host_shell_fs;
 use host_shell::{HostShellConfig, HostShellManager};
 
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");

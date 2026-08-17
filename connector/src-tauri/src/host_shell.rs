@@ -49,7 +49,7 @@ impl HostShellManager {
     }
 }
 
-fn ws_base(server_url: &str) -> Result<String, String> {
+pub(crate) fn ws_base(server_url: &str) -> Result<String, String> {
     let base = server_url.trim_end_matches('/');
     if let Some(rest) = base.strip_prefix("https://") {
         Ok(format!("wss://{}", rest))
@@ -128,19 +128,32 @@ struct ControlMessage {
     r#type: String,
     #[serde(rename = "sessionId")]
     session_id: Option<String>,
+    cwd: Option<String>,
 }
 
 fn handle_control(text: &str, config: &HostShellConfig) {
     let Ok(msg) = serde_json::from_str::<ControlMessage>(text) else { return };
-    if msg.r#type == "open" {
-        if let Some(session_id) = msg.session_id {
+    let Some(session_id) = msg.session_id else { return };
+
+    match msg.r#type.as_str() {
+        "open" => {
             let config = config.clone();
+            let cwd = msg.cwd;
             tokio::spawn(async move {
-                if let Err(e) = run_shell_session(config, session_id).await {
+                if let Err(e) = run_shell_session(config, session_id, cwd).await {
                     eprintln!("Host shell session error: {}", e);
                 }
             });
         }
+        "open-fs" => {
+            let config = config.clone();
+            tokio::spawn(async move {
+                if let Err(e) = crate::host_shell_fs::run_fs_session(config, session_id).await {
+                    eprintln!("Host shell fs session error: {}", e);
+                }
+            });
+        }
+        _ => {}
     }
 }
 
@@ -151,7 +164,7 @@ struct ResizeMessage {
     rows: Option<u16>,
 }
 
-async fn run_shell_session(config: HostShellConfig, session_id: String) -> Result<(), String> {
+async fn run_shell_session(config: HostShellConfig, session_id: String, cwd: Option<String>) -> Result<(), String> {
     let url = format!(
         "{}/api/ws/host-shell/data?sessionToken={}&sessionId={}",
         ws_base(&config.server_url)?,
@@ -169,9 +182,18 @@ async fn run_shell_session(config: HostShellConfig, session_id: String) -> Resul
         .openpty(PtySize { rows: 24, cols: 80, pixel_width: 0, pixel_height: 0 })
         .map_err(|e| format!("Failed to open PTY: {}", e))?;
 
+    let mut cmd = CommandBuilder::new_default_prog();
+    if let Some(virtual_cwd) = cwd {
+        if let Ok(Some(real)) = crate::host_fs::resolve_path(&virtual_cwd) {
+            if real.is_dir() {
+                cmd.cwd(real);
+            }
+        }
+    }
+
     let mut child = pair
         .slave
-        .spawn_command(CommandBuilder::new_default_prog())
+        .spawn_command(cmd)
         .map_err(|e| format!("Failed to spawn shell: {}", e))?;
     drop(pair.slave);
 

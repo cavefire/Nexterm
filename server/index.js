@@ -76,6 +76,7 @@ app.ws("/api/ws/tunnel", require("./routes/tunnel"));
 app.ws("/api/ws/state", require("./routes/state"));
 app.ws("/api/ws/host-shell/provider", require("./routes/hostShellProvider"));
 app.ws("/api/ws/host-shell/data", require("./routes/hostShellData"));
+app.ws("/api/ws/host-shell/fs", require("./routes/hostShellFs"));
 
 app.use("/api/entries/sftp", require("./routes/sftp"));
 

@@ -159,6 +159,27 @@ const createSFTPConnectionForSession = async (sessionId, entry, accountId) => {
     if (session._connecting) return session._connecting;
 
     session._connecting = (async () => {
+        if (getEntryProtocol(entry) === "host-shell") {
+            const deviceId = entry.config?.deviceId;
+            if (!deviceId) throw new Error("Host shell entry is missing its device id");
+
+            const fsClient = await hostShellRegistry.requestFs(accountId, deviceId, sessionId);
+            fsClient.on("close", () => {
+                logger.info("Host shell fs connection closed", { sessionId });
+                SessionManager.remove(sessionId);
+            });
+            await fsClient.waitForReady();
+
+            SessionManager.setConnection(sessionId, {
+                sftpClient: fsClient,
+                type: "sftp",
+                auditLogId: session.auditLogId,
+            });
+
+            logger.info("Host shell fs connected", { sessionId, deviceId });
+            return { success: true };
+        }
+
         requireEngine();
         const { identityId, directIdentity } = session.configuration;
         const { host, port, params } = await resolveFileTransferContext(entry, identityId, directIdentity, accountId);
@@ -196,6 +217,7 @@ const createSFTPConnectionForSession = async (sessionId, entry, accountId) => {
 };
 
 const getAuxiliarySFTPClient = async (sessionId, entry, accountId, opts) => {
+    if (getEntryProtocol(entry) === "host-shell") throw new Error("Auxiliary SFTP clients are not supported for host-shell");
     const { suffix, clientKey, connectingKey, label } = opts;
     const session = requireSession(sessionId);
     const conn = SessionManager.getConnection(sessionId);
@@ -395,7 +417,8 @@ const createHostShellConnectionForSession = async (sessionId, entry, organizatio
     const deviceId = entry.config?.deviceId;
     if (!deviceId) throw new Error("Host shell entry is missing its device id");
 
-    const dataSocket = await hostShellRegistry.requestShell(accountId, deviceId, sessionId);
+    const startPath = session.configuration.startPath || null;
+    const dataSocket = await hostShellRegistry.requestShell(accountId, deviceId, sessionId, startPath);
 
     dataSocket.on("data", (data) => SessionManager.appendLog(sessionId, data.toString()));
     dataSocket.on("close", () => {

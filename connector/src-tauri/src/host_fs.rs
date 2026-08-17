@@ -30,6 +30,10 @@ impl HostFsError {
         Self { code, message: message.into() }
     }
 
+    pub(crate) fn into_message(self) -> String {
+        self.message
+    }
+
     fn from_io(err: std::io::Error) -> Self {
         use std::io::ErrorKind::*;
         let code = match err.kind() {
@@ -81,7 +85,7 @@ struct HostFsInner {
 }
 
 #[cfg(windows)]
-fn list_drive_letters() -> Vec<char> {
+pub(crate) fn list_drive_letters() -> Vec<char> {
     let mut drives = Vec::new();
     for c in b'A'..=b'Z' {
         let letter = c as char;
@@ -93,7 +97,7 @@ fn list_drive_letters() -> Vec<char> {
     drives
 }
 
-fn resolve_path(virtual_path: &str) -> Result<Option<PathBuf>, HostFsError> {
+pub(crate) fn resolve_path(virtual_path: &str) -> Result<Option<PathBuf>, HostFsError> {
 
     let trimmed = virtual_path.trim_start_matches(|c| c == '/' || c == '\\');
     #[cfg(windows)]

@@ -38,12 +38,21 @@ class HostShellRegistry {
         return this._devices.get(accountId)?.get(deviceId) || null;
     }
 
-    requestShell(accountId, deviceId, sessionId) {
+    requestShell(accountId, deviceId, sessionId, cwd = null) {
         const device = this.getDevice(accountId, deviceId);
         if (!device) return Promise.reject(new Error("Device is offline"));
 
         const dataPromise = this._waitForData(sessionId);
-        device.ws.send(JSON.stringify({ type: "open", sessionId }));
+        device.ws.send(JSON.stringify({ type: "open", sessionId, ...(cwd ? { cwd } : {}) }));
+        return dataPromise;
+    }
+
+    requestFs(accountId, deviceId, sessionId) {
+        const device = this.getDevice(accountId, deviceId);
+        if (!device) return Promise.reject(new Error("Device is offline"));
+
+        const dataPromise = this._waitForData(`fs:${sessionId}`);
+        device.ws.send(JSON.stringify({ type: "open-fs", sessionId }));
         return dataPromise;
     }
 

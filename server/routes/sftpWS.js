@@ -42,7 +42,7 @@ const requirePath = (p) => { if (!p?.path) throw new Error("Invalid path"); };
 const requirePaths = (p) => { if (!p?.path || !p?.newPath) throw new Error("Invalid paths"); };
 const requireMultiPaths = (p) => { if (!p?.sources?.length || !p?.destination) throw new Error("Invalid paths"); };
 
-const SHELL_LESS_PROTOCOLS = new Set(["ftp", "ftps"]);
+const SHELL_LESS_PROTOCOLS = new Set(["ftp", "ftps", "host-shell"]);
 const TERMINAL_LESS_PROTOCOLS = new Set(["sftp", "ftp", "ftps"]);
 
 const getCapabilities = (entry) => {

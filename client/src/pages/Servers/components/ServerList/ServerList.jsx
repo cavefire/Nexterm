@@ -906,6 +906,14 @@ export const ServerList = ({
                             </>
                         )}
 
+                        {contextClickedType === "server-object" && server?.type === "host-shell" && (
+                            <ContextMenuItem
+                                icon={mdiFolderOpen}
+                                label={t("servers.contextMenu.openSFTP")}
+                                onClick={() => openSFTP(server?.id)}
+                            />
+                        )}
+
                         {contextClickedType === "server-object" && server?.type?.startsWith("pve-") && (
                             <>
                                 {liveSessionMenu}
