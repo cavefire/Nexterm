@@ -40,6 +40,7 @@ export const ViewContainer = ({
                                   hibernateSession,
                                   duplicateSession,
                                   openNotes,
+                                  promoteNotesSession,
                                   markSessionErrored,
                                   getSessionError,
                                   setOpenFileEditors,
@@ -397,7 +398,7 @@ export const ViewContainer = ({
 
     const renderRenderer = (session) => {
         if (session.type === "notes") {
-            return <NotesRenderer session={session} />;
+            return <NotesRenderer session={session} onPromote={promoteNotesSession} />;
         }
 
         if (session.scriptId) {

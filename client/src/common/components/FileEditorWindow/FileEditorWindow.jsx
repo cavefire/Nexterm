@@ -1,18 +1,14 @@
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserContext } from "@/common/contexts/UserContext.jsx";
-import { usePreferences } from "@/common/contexts/PreferencesContext.jsx";
 import { useToast } from "@/common/contexts/ToastContext.jsx";
 import { downloadRequest, uploadFile } from "@/common/utils/RequestUtil.js";
 import { ActionConfirmDialog } from "@/common/components/ActionConfirmDialog/ActionConfirmDialog.jsx";
-import Editor, { loader } from "@monaco-editor/react";
+import CodeEditor from "@/common/components/CodeEditor/CodeEditor.jsx";
 import Icon from "@mdi/react";
 import { mdiContentSave, mdiTextBox } from "@mdi/js";
 import FloatingWindow, { FloatingWindowAction } from "@/common/components/FloatingWindow";
 import "./styles.sass";
-import * as monaco from "monaco-editor";
-
-loader.config({ monaco });
 
 const normalizeFilename = (filename) => filename?.toLowerCase() || "";
 
@@ -86,7 +82,6 @@ const getMonacoLanguage = (filename) => {
 
 export const FileEditorWindow = ({ file, session, onClose }) => {
     const { t } = useTranslation();
-    const { theme } = usePreferences();
     const { sessionToken } = useContext(UserContext);
     const { sendToast } = useToast();
     const [fileContent, setFileContent] = useState("");
@@ -169,21 +164,10 @@ export const FileEditorWindow = ({ file, session, onClose }) => {
                             <span>{t("servers.fileManager.fileEditor.loading")}</span>
                         </div>
                     ) : (
-                        <Editor
+                        <CodeEditor
                             value={fileContent}
                             onChange={updateContent}
                             language={language}
-                            theme={theme === "dark" || theme === "oled" ? "vs-dark" : "vs-light"}
-                            options={{
-                                minimap: { enabled: false },
-                                fontSize: 14,
-                                lineNumbers: "on",
-                                scrollBeyondLastLine: false,
-                                automaticLayout: true,
-                                wordWrap: "off",
-                                tabSize: 4,
-                                insertSpaces: true,
-                            }}
                         />
                     )}
                 </div>

@@ -378,6 +378,8 @@ module.exports.listEntries = async (accountId) => {
             position: entry.position,
             renderer: entry.renderer,
             tags: tags || [],
+            notes: entry.config?.notes || "",
+            showNoteInList: Boolean(entry.config?.showNoteInList),
         };
 
         if (entry.type === 'server') {
@@ -388,8 +390,6 @@ module.exports.listEntries = async (accountId) => {
                 ip: entry.config?.ip,
                 macAddress: entry.config?.macAddress,
                 wakeOnLanEnabled: entry.config?.wakeOnLanEnabled,
-                notes: entry.config?.notes || "",
-                showNoteInList: Boolean(entry.config?.showNoteInList),
             };
         }
 

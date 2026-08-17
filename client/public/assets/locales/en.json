@@ -2061,6 +2061,9 @@
     "notesPanel": {
       "title": "Notes",
       "placeholder": "Write notes for this server…",
+      "edit": "Edit",
+      "preview": "Preview",
+      "empty": "No notes for this entry yet.",
       "showInList": "Show in list",
       "showInListTooltip": "Display the first line of these notes under the server name in the sidebar.",
       "status": {

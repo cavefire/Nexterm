@@ -186,7 +186,7 @@ export const Servers = () => {
 
         setActiveSessions(prevSessions => {
             if (prevSessions.some(s => s.id === tabId)) return prevSessions;
-            return [...prevSessions, { id: tabId, joinSessionId: sessionId, isJoined: true, ...tab }];
+            return [...withoutTemporaryNotes(prevSessions), { id: tabId, joinSessionId: sessionId, isJoined: true, ...tab }];
         });
         setActiveSessionId(tabId);
     };
@@ -251,7 +251,7 @@ export const Servers = () => {
                 scriptName: scriptName || undefined,
             };
 
-            setActiveSessions(prevSessions => [...prevSessions, sessionData]);
+            setActiveSessions(prevSessions => [...withoutTemporaryNotes(prevSessions), sessionData]);
             setActiveSessionId(session.sessionId);
         } catch (error) {
             console.error("Failed to create session", error);
@@ -346,13 +346,20 @@ export const Servers = () => {
         disconnectFromServer(sessionId);
     };
 
-    const openNotes = (serverId) => {
+    const promoteNotesSession = useCallback((sessionId) => {
+        setActiveSessions(prev => prev.map(s => s.id === sessionId ? { ...s, temporary: false } : s));
+    }, [setActiveSessions]);
+
+    const withoutTemporaryNotes = (sessions) => sessions.filter(s => !(s.type === "notes" && s.temporary));
+
+    const openNotes = (serverId, mode = "edit", temporary = false) => {
         const server = getServerById(serverId);
         if (!server) return;
 
         const notesId = `notes-${serverId}`;
         const existing = activeSessions.find(s => s.id === notesId);
         if (existing) {
+            if (mode === "edit" && existing.temporary) promoteNotesSession(notesId);
             setActiveSessionId(notesId);
             return;
         }
@@ -364,13 +371,20 @@ export const Servers = () => {
             server,
             id: notesId,
             type: "notes",
+            notesMode: mode,
+            temporary,
             organizationId,
             organizationName: organization?.name || null,
         };
 
-        setActiveSessions(prev => [...prev, sessionData]);
+        setActiveSessions(prev => [
+            ...(temporary ? withoutTemporaryNotes(prev) : prev),
+            sessionData,
+        ]);
         setActiveSessionId(notesId);
     };
+
+    const activeNotesEntryId = activeSessions.find(s => s.type === "notes" && s.id === activeSessionId)?.server?.id ?? null;
 
     const hibernateSession = async (sessionId) => {
         try {
@@ -401,7 +415,7 @@ export const Servers = () => {
                         shareId: null,
                         shareWritable: false,
                     };
-                    setActiveSessions(prevSessions => [...prevSessions, sessionData]);
+                    setActiveSessions(prevSessions => [...withoutTemporaryNotes(prevSessions), sessionData]);
                     setActiveSessionId(result.sessionId);
                 }
             }
@@ -438,7 +452,7 @@ export const Servers = () => {
                 organizationName: originalSession.organizationName,
             };
 
-            setActiveSessions(prevSessions => [...prevSessions, sessionData]);
+            setActiveSessions(prevSessions => [...withoutTemporaryNotes(prevSessions), sessionData]);
             setActiveSessionId(session.sessionId);
         } catch (error) {
             console.error("Failed to open terminal from file manager", error);
@@ -554,6 +568,7 @@ export const Servers = () => {
                             joinLiveSession={joinLiveSession}
                             openDirectConnect={openDirectConnect} runScript={runScript}
                             openNotes={openNotes}
+                            activeNotesEntryId={activeNotesEntryId}
                             openPortForward={isTauri() ? openPortForward : undefined}
                             mobileOpen={mobileServerListOpen} setMobileOpen={setMobileServerListOpen} />,
                 leftPaneSlot
@@ -573,6 +588,7 @@ export const Servers = () => {
                                activeSessionId={activeSessionId} setActiveSessionId={setActiveSessionId}
                                hibernateSession={hibernateSession} duplicateSession={duplicateSession}
                                openNotes={openNotes}
+                               promoteNotesSession={promoteNotesSession}
                                markSessionErrored={markSessionErrored}
                                getSessionError={getSessionError}
                                setOpenFileEditors={setOpenFileEditors}

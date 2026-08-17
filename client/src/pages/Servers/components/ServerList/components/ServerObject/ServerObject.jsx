@@ -7,17 +7,22 @@ import { useLiveSessions } from "@/common/contexts/LiveSessionContext.jsx";
 import AvatarStack from "@/common/components/AvatarStack";
 import { getSessionOwnerLabel } from "@/common/utils/avatar.js";
 import { useTranslation } from "react-i18next";
-import { useContext, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { patchRequest } from "@/common/utils/RequestUtil.js";
 import { DropIndicator } from "../DropIndicator";
 
-export const ServerObject = ({ id, name, position, folderId, organizationId, nestedLevel, icon, type, connectToServer, status, tags = [], hibernatedSessionCount = 0 }) => {
+export const ServerObject = ({ id, name, position, folderId, organizationId, nestedLevel, icon, type, connectToServer, openNotes, notesOpen = false, status, tags = [], hibernatedSessionCount = 0 }) => {
     const { loadServers, getServerById } = useContext(ServerContext);
     const { getLiveSessionsForEntry } = useLiveSessions();
     const { t } = useTranslation();
     const [dropPlacement, setDropPlacement] = useState(null);
     const elementRef = useRef(null);
+    const clickTimerRef = useRef(null);
+
+    useEffect(() => () => {
+        if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    }, []);
 
     const isIntegrationEntry = Boolean(type?.startsWith("pve-"));
 
@@ -81,7 +86,19 @@ export const ServerObject = ({ id, name, position, folderId, organizationId, nes
         : undefined;
 
     const connect = () => {
+        if (clickTimerRef.current) {
+            clearTimeout(clickTimerRef.current);
+            clickTimerRef.current = null;
+        }
         connectToServer(server.id, server.identities?.[0]);
+    };
+
+    const handleClick = () => {
+        if (!openNotes || clickTimerRef.current) return;
+        clickTimerRef.current = setTimeout(() => {
+            clickTimerRef.current = null;
+            openNotes(id, "preview", true);
+        }, 250);
     };
 
     const noteLine = server?.showNoteInList
@@ -90,13 +107,14 @@ export const ServerObject = ({ id, name, position, folderId, organizationId, nes
 
     return (
         <div 
-            className={"server-object"}
+            className={"server-object" + (notesOpen ? " notes-open" : "")}
             style={{ paddingLeft: `${15 + (nestedLevel * 15)}px`, opacity, position: 'relative' }} 
             data-id={id}
             ref={(node) => {
                 elementRef.current = node;
                 dragRef(dropRef(node));
             }}
+            onClick={handleClick}
             onDoubleClick={connect}
             onMouseLeave={() => setDropPlacement(null)}>
             <DropIndicator show={isOver && dropPlacement === 'before'} placement="before" />

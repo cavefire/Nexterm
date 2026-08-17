@@ -1,8 +1,10 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Icon from "@mdi/react";
-import { mdiCheckCircleOutline, mdiNoteEditOutline, mdiSync } from "@mdi/js";
+import { mdiCheckCircleOutline, mdiEyeOutline, mdiNoteEditOutline, mdiPencil, mdiSync } from "@mdi/js";
+import CodeEditor from "@/common/components/CodeEditor/CodeEditor.jsx";
 import { getRequest, patchRequest } from "@/common/utils/RequestUtil.js";
+import { renderMarkdown } from "@/common/utils/markdown.jsx";
 import ToggleSwitch from "@/common/components/ToggleSwitch";
 import Tooltip from "@/common/components/Tooltip";
 import { ServerContext } from "@/common/contexts/ServerContext.jsx";
@@ -12,7 +14,7 @@ const SAVE_DEBOUNCE_MS = 800;
 
 const STATUS = { IDLE: "idle", DIRTY: "dirty", SAVING: "saving", SAVED: "saved", ERROR: "error" };
 
-export const NotesRenderer = ({ session }) => {
+export const NotesRenderer = ({ session, onPromote }) => {
     const { t } = useTranslation();
     const { getServerById } = useContext(ServerContext);
 
@@ -26,14 +28,16 @@ export const NotesRenderer = ({ session }) => {
     const [value, setValue] = useState(initialNotes);
     const [showInList, setShowInList] = useState(initialShowInList);
     const [status, setStatus] = useState(STATUS.IDLE);
+    const [mode, setMode] = useState(session?.notesMode === "preview" ? "preview" : "edit");
+    const [splitPreview, setSplitPreview] = useState(() => window.innerWidth > 768);
 
-    const textareaRef = useRef(null);
     const entrySnapshotRef = useRef(null);
     const saveTimerRef = useRef(null);
     const inFlightRef = useRef(false);
     const pendingPatchRef = useRef(null);
     const lastSavedRef = useRef({ notes: initialNotes, showNoteInList: initialShowInList });
     const valueRef = useRef(initialNotes);
+    const flushRef = useRef(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -126,8 +130,10 @@ export const NotesRenderer = ({ session }) => {
             clearTimeout(saveTimerRef.current);
             saveTimerRef.current = null;
         }
-        if (value !== lastSavedRef.current.notes) persist({ notes: value });
-    }, [value, persist]);
+        if (valueRef.current !== lastSavedRef.current.notes) persist({ notes: valueRef.current });
+    }, [persist]);
+
+    flushRef.current = flushNotesSave;
 
     useEffect(() => () => {
         if (saveTimerRef.current) {
@@ -138,20 +144,22 @@ export const NotesRenderer = ({ session }) => {
         if (latest !== lastSavedRef.current.notes) persist({ notes: latest });
     }, []);
 
-    const handleChange = (e) => {
-        const next = e.target.value;
+    const handleChange = (next) => {
         valueRef.current = next;
         setValue(next);
         setStatus(next === lastSavedRef.current.notes ? STATUS.IDLE : STATUS.DIRTY);
         scheduleNotesSave(next);
     };
 
-    const handleKeyDown = (e) => {
-        if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
-            e.preventDefault();
-            e.stopPropagation();
-            flushNotesSave();
-        }
+    const handleEditorMount = (editor, monaco) => {
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => flushRef.current?.());
+        editor.onDidBlurEditorWidget(() => flushRef.current?.());
+        editor.focus();
+    };
+
+    const enterEdit = () => {
+        onPromote?.(session?.id);
+        setMode("edit");
     };
 
     const handleShowInListToggle = (checked) => {
@@ -202,26 +210,62 @@ export const NotesRenderer = ({ session }) => {
                     <h3>{t("servers.notesPanel.title")}</h3>
                 </div>
                 <div className="notes-actions">
-                    <Tooltip text={t("servers.notesPanel.showInListTooltip")} delay={600}>
-                        <label htmlFor={toggleId} className="notes-toggle">
-                            <span className="notes-toggle-label">{t("servers.notesPanel.showInList")}</span>
-                            <ToggleSwitch id={toggleId} checked={showInList} onChange={handleShowInListToggle} />
-                        </label>
-                    </Tooltip>
-                    {renderStatus()}
+                    {mode === "edit" ? (
+                        <>
+                            <Tooltip text={t("servers.notesPanel.showInListTooltip")} delay={600}>
+                                <label htmlFor={toggleId} className="notes-toggle">
+                                    <span className="notes-toggle-label">{t("servers.notesPanel.showInList")}</span>
+                                    <ToggleSwitch id={toggleId} checked={showInList} onChange={handleShowInListToggle} />
+                                </label>
+                            </Tooltip>
+                            {renderStatus()}
+                            <button className={"notes-mode-toggle" + (splitPreview ? " active" : "")}
+                                    onClick={() => setSplitPreview(v => !v)}>
+                                <Icon path={mdiEyeOutline} />
+                                <span>{t("servers.notesPanel.preview")}</span>
+                            </button>
+                        </>
+                    ) : (
+                        <button className="notes-mode-toggle" onClick={enterEdit}>
+                            <Icon path={mdiPencil} />
+                            <span>{t("servers.notesPanel.edit")}</span>
+                        </button>
+                    )}
                 </div>
             </div>
-            <textarea
-                ref={textareaRef}
-                className="notes-textarea"
-                value={value}
-                onChange={handleChange}
-                onBlur={flushNotesSave}
-                onKeyDown={handleKeyDown}
-                placeholder={t("servers.notesPanel.placeholder")}
-                spellCheck={false}
-                autoFocus
-            />
+            {mode === "edit" ? (
+                <div className={"notes-editor" + (splitPreview ? " split" : "")}>
+                    <div className="notes-editor-pane">
+                        <CodeEditor
+                            value={value}
+                            onChange={(next) => handleChange(next ?? "")}
+                            language="markdown"
+                            onMount={handleEditorMount}
+                            options={{ wordWrap: "on", tabSize: 2, padding: { top: 12 } }}
+                        />
+                    </div>
+                    {splitPreview && (
+                        <div className="notes-preview">
+                            {value.trim() ? renderMarkdown(value) : (
+                                <p className="notes-preview-placeholder">{t("servers.notesPanel.empty")}</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="notes-preview">
+                    {value.trim() ? renderMarkdown(value) : (
+                        <div className="notes-empty">
+                            <Icon path={mdiNoteEditOutline} />
+                            <p>{t("servers.notesPanel.empty")}</p>
+                            <button className="notes-mode-toggle" onClick={enterEdit}>
+                                <Icon path={mdiPencil} />
+                                <span>{t("servers.notesPanel.edit")}</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

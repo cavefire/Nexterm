@@ -104,7 +104,7 @@ const DraggableTab = ({
             <div ref={(node) => drag(drop(node))} onClick={() => setActiveSessionId(session.id)}
                 onContextMenu={handleContextMenu}
                 onAuxClick={handleAuxClick}
-                className={`server-tab ${session.id === activeSessionId ? "server-tab-active" : ""} ${isDragging ? "dragging" : ""} ${isOver ? "drop-target" : ""}`}
+                className={`server-tab ${session.id === activeSessionId ? "server-tab-active" : ""} ${session.temporary ? "server-tab-temporary" : ""} ${isDragging ? "dragging" : ""} ${isOver ? "drop-target" : ""}`}
                 style={{ opacity: isDragging ? 0.5 : 1 }}>
                 <div className={`progress-circle ${!showProgress ? "no-progress" : ""}`}>
                     {showProgress && (

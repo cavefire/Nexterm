@@ -2,7 +2,7 @@ import ServerObject from "@/pages/Servers/components/ServerList/components/Serve
 import CollapsibleFolder from "./CollapsibleFolder.jsx";
 import OrganizationFolder from "./OrganizationFolder";
 
-const ServerEntries = ({ entries, nestedLevel, setRenameStateId, connectToServer, folderId, organizationId, hibernatedSessions = [] }) => {
+const ServerEntries = ({ entries, nestedLevel, setRenameStateId, connectToServer, openNotes, activeNotesEntryId, folderId, organizationId, hibernatedSessions = [] }) => {
     return (
         <>
             {entries.map(entry => {
@@ -15,6 +15,8 @@ const ServerEntries = ({ entries, nestedLevel, setRenameStateId, connectToServer
                             entries={entry.entries}
                             nestedLevel={nestedLevel}
                             connectToServer={connectToServer}
+                            openNotes={openNotes}
+                            activeNotesEntryId={activeNotesEntryId}
                             setRenameStateId={setRenameStateId}
                             hibernatedSessions={hibernatedSessions}
                         />
@@ -32,6 +34,8 @@ const ServerEntries = ({ entries, nestedLevel, setRenameStateId, connectToServer
                             organizationId={organizationId}
                             folderType={entry.folderType}
                             connectToServer={connectToServer}
+                            openNotes={openNotes}
+                            activeNotesEntryId={activeNotesEntryId}
                             hibernatedSessions={hibernatedSessions}
                         />
                     );
@@ -51,6 +55,8 @@ const ServerEntries = ({ entries, nestedLevel, setRenameStateId, connectToServer
                             status={entry.status}
                             tags={entry.tags}
                             connectToServer={connectToServer}
+                            openNotes={openNotes}
+                            notesOpen={activeNotesEntryId === entry.id}
                             hibernatedSessionCount={hibernatedCount}
                         />
                     );

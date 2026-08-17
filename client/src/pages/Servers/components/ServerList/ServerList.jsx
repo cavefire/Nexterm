@@ -108,6 +108,7 @@ export const ServerList = ({
     openDirectConnect,
     runScript,
     openNotes,
+    activeNotesEntryId,
     openPortForward,
     mobileOpen = false,
     setMobileOpen,
@@ -589,7 +590,8 @@ export const ServerList = ({
                             onContextMenu={handleContextMenu}
                             ref={serversContainerRef}>
                             <ServerEntries entries={renameStateServers} setRenameStateId={setRenameStateId}
-                                nestedLevel={0} connectToServer={connectToServer} hibernatedSessions={hibernatedSessions} />
+                                nestedLevel={0} connectToServer={connectToServer} openNotes={openNotes} activeNotesEntryId={activeNotesEntryId}
+                                hibernatedSessions={hibernatedSessions} />
                         </div>
                     )}
                     {servers && servers.length === 0 && (
