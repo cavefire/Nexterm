@@ -7,11 +7,11 @@ const stateBroadcaster = require("../lib/StateBroadcaster");
 const { ACCOUNT_VIEW_ATTRIBUTES, toAccountView } = require("../utils/accountView");
 const { Permission } = require("../permissions/registry");
 const { hasOrganizationPermission } = require("../utils/permission");
+const { validateEntryAccess } = require("./entry");
 
 const isSharingEnabled = (organization) => organization?.sessionSettings?.enableLiveSessionSharing === true;
 
-const isJoinableSession = (session) =>
-    session.configuration?.type !== "sftp" && !session.configuration?.scriptId;
+const isJoinableSession = (session) => SessionManager.isJoinable(session);
 
 const getSharingOrganizations = async (accountId) => {
     const memberships = await OrganizationMember.findAll({ where: { accountId, status: "active" } });
@@ -77,6 +77,15 @@ const listLiveSessions = async (accountId) => {
 const resolveJoinAccess = async (accountId, sessionId) => {
     const session = SessionManager.get(sessionId);
     if (!session) return { code: 404, message: "Session not found" };
+
+    if (session.configuration?.protocol === "serial" && isJoinableSession(session)) {
+        const entry = await Entry.findByPk(session.entryId);
+        if (!entry) return { code: 404, message: "Entry not found" };
+        const access = await validateEntryAccess(accountId, entry, "Access denied", Permission.CONNECT_SSH);
+        if (!access.valid) return { code: 403, message: "You don't have access to this entry" };
+        return { session, writable: true };
+    }
+
     if (session.accountId === accountId) return { code: 400, message: "You already own this session" };
     if (!session.organizationId) return { code: 403, message: "This session is not shared with an organization" };
     if (!isJoinableSession(session)) return { code: 400, message: "This session type cannot be joined" };

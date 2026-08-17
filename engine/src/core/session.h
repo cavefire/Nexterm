@@ -18,6 +18,7 @@ typedef enum {
     SESSION_TYPE_TUNNEL,
     SESSION_TYPE_WEBSOCKET,
     SESSION_TYPE_DEMO,
+    SESSION_TYPE_SERIAL,
 } session_type_t;
 
 typedef enum {
@@ -61,6 +62,8 @@ typedef struct nexterm_session {
 
     int telnet_sock;
 
+    int serial_fd;
+
     pthread_t thread;
     bool thread_active;
 } nexterm_session_t;
@@ -97,6 +100,10 @@ void nexterm_sm_finish(nexterm_session_manager_t* sm,
 void nexterm_sm_request_resize(nexterm_session_manager_t* sm,
                                const char* session_id,
                                uint16_t cols, uint16_t rows);
+
+bool nexterm_sm_serial_in_use(nexterm_session_manager_t* sm,
+                              const nexterm_session_t* self,
+                              const char* device);
 
 const char* nexterm_session_get_param(const nexterm_session_t* session,
                                       const char* key);

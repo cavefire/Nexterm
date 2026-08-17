@@ -49,6 +49,7 @@ nexterm_session_t* nexterm_sm_create(nexterm_session_manager_t* sm,
     session->guac_client = NULL;
     session->ssh_sock = -1;
     session->telnet_sock = -1;
+    session->serial_fd = -1;
     session->param_count = 0;
 
     sm->count++;
@@ -165,6 +166,24 @@ void nexterm_sm_request_resize(nexterm_session_manager_t* sm,
     }
 
     pthread_mutex_unlock(&sm->mutex);
+}
+
+bool nexterm_sm_serial_in_use(nexterm_session_manager_t* sm,
+                              const nexterm_session_t* self,
+                              const char* device) {
+    bool in_use = false;
+    pthread_mutex_lock(&sm->mutex);
+    for (int i = 0; i < MAX_SESSIONS; i++) {
+        const nexterm_session_t* s = &sm->sessions[i];
+        if (s == self || s->session_id[0] == '\0') continue;
+        if (s->type == SESSION_TYPE_SERIAL && s->serial_fd >= 0 &&
+            strcmp(s->host, device) == 0) {
+            in_use = true;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&sm->mutex);
+    return in_use;
 }
 
 const char* nexterm_session_get_param(const nexterm_session_t* session,

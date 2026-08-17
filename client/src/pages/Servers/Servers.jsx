@@ -172,7 +172,7 @@ export const Servers = () => {
     useEffect(() => {
         const liveIds = new Set(liveSessions.map(session => session.id));
         const staleIds = new Set(activeSessions
-            .filter(s => s.isJoined && !liveIds.has(s.joinSessionId))
+            .filter(s => s.isJoined && !s.serialJoin && !liveIds.has(s.joinSessionId))
             .map(s => s.id));
         if (!staleIds.size) return;
 
@@ -181,31 +181,30 @@ export const Servers = () => {
         setActiveSessionId(current => staleIds.has(current) ? remaining.at(-1)?.id || null : current);
     }, [liveSessions, activeSessions, setActiveSessions, setActiveSessionId]);
 
-    const joinLiveSession = (liveSession) => {
-        const tabId = `join-${liveSession.id}`;
+    const addJoinTab = (sessionId, tab) => {
+        const tabId = `join-${sessionId}`;
 
         setActiveSessions(prevSessions => {
             if (prevSessions.some(s => s.id === tabId)) return prevSessions;
-            return [...prevSessions, {
-                id: tabId,
-                joinSessionId: liveSession.id,
-                isJoined: true,
-                writable: liveSession.writable,
-                owner: liveSession.owner,
-                server: {
-                    id: liveSession.entryId,
-                    name: liveSession.entryName,
-                    icon: liveSession.icon,
-                    type: liveSession.protocol,
-                    renderer: liveSession.renderer,
-                },
-                type: liveSession.type || undefined,
-                organizationId: liveSession.organizationId,
-                organizationName: liveSession.organizationName,
-            }];
+            return [...prevSessions, { id: tabId, joinSessionId: sessionId, isJoined: true, ...tab }];
         });
         setActiveSessionId(tabId);
     };
+
+    const joinLiveSession = (liveSession) => addJoinTab(liveSession.id, {
+        writable: liveSession.writable,
+        owner: liveSession.owner,
+        server: {
+            id: liveSession.entryId,
+            name: liveSession.entryName,
+            icon: liveSession.icon,
+            type: liveSession.protocol,
+            renderer: liveSession.renderer,
+        },
+        type: liveSession.type || undefined,
+        organizationId: liveSession.organizationId,
+        organizationName: liveSession.organizationName,
+    });
 
     const openSFTP = async (server, identity) => {
         initiateConnection({ server: getServerById(server), identity, type: "sftp" });
@@ -228,6 +227,18 @@ export const Servers = () => {
 
             const organization = findOrganizationForServer(server.id, servers);
             const organizationId = organization ? parseInt(organization.id.split("-")[1]) : null;
+
+            if (session.join) {
+                addJoinTab(session.sessionId, {
+                    serialJoin: true,
+                    writable: true,
+                    server,
+                    type: type || undefined,
+                    organizationId: organizationId,
+                    organizationName: organization?.name || null,
+                });
+                return;
+            }
 
             const sessionData = {
                 server,

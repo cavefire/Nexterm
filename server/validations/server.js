@@ -1,9 +1,14 @@
 const Joi = require("joi");
 
 const configValidation = Joi.object({
-    protocol: Joi.string().valid("ssh", "telnet", "rdp", "vnc", "sftp", "ftp", "ftps", "demo").optional(),
+    protocol: Joi.string().valid("ssh", "telnet", "rdp", "vnc", "sftp", "ftp", "ftps", "demo", "serial").optional(),
     ip: Joi.string().optional(),
     port: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
+    device: Joi.string().optional(),
+    baudRate: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
+    dataBits: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
+    parity: Joi.string().valid("none", "even", "odd").optional(),
+    stopBits: Joi.alternatives().try(Joi.string(), Joi.number()).optional(),
     keyboardLayout: Joi.string().optional(),
     monitoringEnabled: Joi.boolean().optional(),
     nodeName: Joi.string().optional(),

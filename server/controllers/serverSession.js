@@ -1,5 +1,5 @@
 const SessionManager = require("../lib/SessionManager");
-const { createConnectionForSession } = require("../lib/ConnectionService");
+const { createConnectionForSession, getEntryProtocol } = require("../lib/ConnectionService");
 const Entry = require("../models/Entry");
 const EntryIdentity = require("../models/EntryIdentity");
 const Account = require("../models/Account");
@@ -16,6 +16,7 @@ const stateBroadcaster = require("../lib/StateBroadcaster");
 const ENTRY_TYPE_TO_AUDIT_ACTION = {
     'ssh': AUDIT_ACTIONS.SSH_CONNECT,
     'telnet': AUDIT_ACTIONS.SSH_CONNECT,
+    'serial': AUDIT_ACTIONS.SSH_CONNECT,
     'rdp': AUDIT_ACTIONS.RDP_CONNECT,
     'vnc': AUDIT_ACTIONS.VNC_CONNECT,
     'demo': AUDIT_ACTIONS.DEMO_CONNECT,
@@ -30,6 +31,7 @@ const ENTRY_TYPE_TO_AUDIT_ACTION = {
 const ENTRY_TYPE_TO_CONNECT_PERMISSION = {
     'ssh': Permission.CONNECT_SSH,
     'telnet': Permission.CONNECT_SSH,
+    'serial': Permission.CONNECT_SSH,
     'rdp': Permission.CONNECT_RDP,
     'vnc': Permission.CONNECT_VNC,
     'demo': Permission.CONNECT_VNC,
@@ -43,15 +45,13 @@ const ENTRY_TYPE_TO_CONNECT_PERMISSION = {
 
 const getAuditAction = (entry, scriptId) => {
     if (scriptId) return AUDIT_ACTIONS.SCRIPT_EXECUTE;
-    const type = entry.type === 'server' ? entry.config?.protocol : entry.type;
-    return ENTRY_TYPE_TO_AUDIT_ACTION[type] || AUDIT_ACTIONS.SSH_CONNECT;
+    return ENTRY_TYPE_TO_AUDIT_ACTION[getEntryProtocol(entry)] || AUDIT_ACTIONS.SSH_CONNECT;
 };
 
 const getRequiredConnectPermission = (entry, type, scriptId) => {
     if (scriptId) return Permission.SCRIPTS_EXECUTE;
     if (type === "sftp") return Permission.FILES_VIEW;
-    const entryType = entry.type === 'server' ? entry.config?.protocol : entry.type;
-    return ENTRY_TYPE_TO_CONNECT_PERMISSION[entryType] || Permission.CONNECT_SSH;
+    return ENTRY_TYPE_TO_CONNECT_PERMISSION[getEntryProtocol(entry)] || Permission.CONNECT_SSH;
 };
 
 const createSession = async (accountId, entryId, identityId, connectionReason, type = null, directIdentity = null, tabId = null, browserId = null, scriptId = null, startPath = null, ipAddress = null, userAgent = null) => {
@@ -77,15 +77,23 @@ const createSession = async (accountId, entryId, identityId, connectionReason, t
         }
     }
 
-    const result = await resolveIdentity(entry, identityId, directIdentity, accountId);
-    const identity = result?.identity !== undefined ? result.identity : result;
+    const entryProtocol = getEntryProtocol(entry);
+    const joinedSession = entryProtocol === "serial" && !scriptId && type !== "sftp"
+        ? SessionManager.findActiveByEntryId(entry.id)
+        : null;
 
-    if (result.accessDenied) {
-        return { code: 403, message: "You don't have access to this identity" };
-    }
+    let resolvedIdentity = null;
+    if (!joinedSession) {
+        const result = await resolveIdentity(entry, identityId, directIdentity, accountId);
+        resolvedIdentity = result?.identity !== undefined ? result.identity : result;
 
-    if (result.requiresIdentity && !identity) {
-        return { code: 400, message: "Identity not found" };
+        if (result.accessDenied) {
+            return { code: 403, message: "You don't have access to this identity" };
+        }
+
+        if (result.requiresIdentity && !resolvedIdentity) {
+            return { code: 400, message: "Identity not found" };
+        }
     }
 
     const auditLogId = await createAuditLog({
@@ -94,14 +102,21 @@ const createSession = async (accountId, entryId, identityId, connectionReason, t
         action: getAuditAction(entry, scriptId),
         resource: scriptId ? RESOURCE_TYPES.SCRIPT : RESOURCE_TYPES.ENTRY,
         resourceId: scriptId || entry.id,
-        details: { connectionReason, ...(scriptId && { serverId: entry.id }) },
+        details: {
+            connectionReason,
+            ...(scriptId && { serverId: entry.id }),
+            ...(joinedSession && { joinedSession: joinedSession.sessionId }),
+        },
         ipAddress,
         userAgent,
     });
 
+    if (joinedSession) return { sessionId: joinedSession.sessionId, join: true };
+
     const configuration = {
-        identityId: identity ? identity.id : null,
+        identityId: resolvedIdentity ? resolvedIdentity.id : null,
         type: type || null,
+        protocol: entryProtocol || null,
         directIdentity: directIdentity || null,
         scriptId: scriptId || null,
         startPath: startPath || null,

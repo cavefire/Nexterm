@@ -26,7 +26,13 @@ module.exports = async (ws, req) => {
 
     if (context.isShared) {
         if (protocol === "ssh") return sshHook(ws, context);
-        if (protocol === "telnet") return telnetHook(ws, context);
+        if (protocol === "telnet" || protocol === "serial") {
+            if (serverSession) {
+                const { conn } = await waitForConnection(serverSession.sessionId);
+                if (!conn) return ws.close(4014, "Connection not available");
+            }
+            return telnetHook(ws, context);
+        }
         if (protocol === "pve-lxc" || protocol === "pve-shell") return pveLxcHook(ws, context);
         return ws.close(4015, "Sharing not supported");
     }
@@ -48,7 +54,7 @@ module.exports = async (ws, req) => {
 
     try {
         if (protocol === "ssh") await sshHook(ws, { ...context, reuseConnection: true });
-        else if (protocol === "telnet") await telnetHook(ws, { ...context, reuseConnection: true });
+        else if (protocol === "telnet" || protocol === "serial") await telnetHook(ws, { ...context, reuseConnection: true });
         else if (protocol === "pve-lxc" || protocol === "pve-shell") await pveLxcHook(ws, { ...context, reuseConnection: true });
         else ws.close(4009, `Unsupported: ${entry.type}`);
     } catch (err) {

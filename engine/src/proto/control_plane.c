@@ -1,9 +1,11 @@
 #include "control_plane.h"
+#include "config.h"
 #include "io.h"
 #include "session.h"
 #include "connection.h"
 #include "ssh.h"
 #include "telnet.h"
+#include "serial.h"
 #include "sftp.h"
 #include "ftp.h"
 #include "http_fetch.h"
@@ -52,6 +54,13 @@ static int send_engine_hello(nexterm_control_plane_t* cp) {
     Nexterm_ControlPlane_EngineHello_version_create_str(&builder, NEXTERM_ENGINE_VERSION);
     if (cp->registration_token && cp->registration_token[0] != '\0')
         Nexterm_ControlPlane_EngineHello_registration_token_create_str(&builder, cp->registration_token);
+    const nexterm_config_t* cfg = nexterm_config_get();
+    if (cfg->serial_port_count > 0) {
+        Nexterm_ControlPlane_EngineHello_serial_ports_start(&builder);
+        for (int i = 0; i < cfg->serial_port_count; i++)
+            Nexterm_ControlPlane_EngineHello_serial_ports_push_create_str(&builder, cfg->serial_ports[i]);
+        Nexterm_ControlPlane_EngineHello_serial_ports_end(&builder);
+    }
     Nexterm_ControlPlane_Envelope_engine_hello_end(&builder);
     Nexterm_ControlPlane_Envelope_end_as_root(&builder);
 
@@ -82,6 +91,7 @@ static session_type_t map_session_type(Nexterm_ControlPlane_SessionType_enum_t t
         case Nexterm_ControlPlane_SessionType_Tunnel: return SESSION_TYPE_TUNNEL;
         case Nexterm_ControlPlane_SessionType_WebSocket: return SESSION_TYPE_WEBSOCKET;
         case Nexterm_ControlPlane_SessionType_Demo:   return SESSION_TYPE_DEMO;
+        case Nexterm_ControlPlane_SessionType_Serial: return SESSION_TYPE_SERIAL;
         default: return SESSION_TYPE_VNC;
     }
 }
@@ -98,6 +108,8 @@ static int start_session_connection(nexterm_session_t* session,
             return nexterm_connection_start_ssh(session, cp);
         case SESSION_TYPE_TELNET:
             return nexterm_connection_start_telnet(session, cp);
+        case SESSION_TYPE_SERIAL:
+            return nexterm_serial_start(session, cp);
         case SESSION_TYPE_SFTP:
             return nexterm_ftp_is_ftp_session(session)
                 ? nexterm_ftp_start(session, cp)

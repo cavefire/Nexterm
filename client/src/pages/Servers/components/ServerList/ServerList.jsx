@@ -42,6 +42,7 @@ import {
     mdiScript,
     mdiTunnel,
     mdiNoteEditOutline,
+    mdiSerialPort,
 } from "@mdi/js";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, useContextMenu } from "@/common/components/ContextMenu";
 import { useDrop, useDragLayer } from "react-dnd";
@@ -621,6 +622,11 @@ export const ServerList = ({
                                             icon={mdiConsole}
                                             label={t("servers.contextMenu.telnetServer")}
                                             onClick={() => createServer("telnet")}
+                                        />
+                                        <ContextMenuItem
+                                            icon={mdiSerialPort}
+                                            label={t("servers.contextMenu.serialServer")}
+                                            onClick={() => createServer("serial")}
                                         />
                                         <ContextMenuItem
                                             icon={mdiDesktopClassic}

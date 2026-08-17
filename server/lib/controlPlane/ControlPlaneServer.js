@@ -409,6 +409,12 @@ class ControlPlaneServer extends EventEmitter {
             return;
         }
 
+        const serialPorts = [];
+        for (let i = 0; i < hello.serialPortsLength(); i++) {
+            const port = hello.serialPorts(i);
+            if (port) serialPorts.push(port);
+        }
+
         const dbEngineId = String(engineRecord.id);
         logger.system(`Engine connected: id=${dbEngineId} name=${engineRecord.name} version=${version} from ${remoteAddr}${socket._encrypted ? " (TLS)" : ""}`);
 
@@ -421,6 +427,7 @@ class ControlPlaneServer extends EventEmitter {
             connectedAt: Date.now(),
             lastPong: Date.now(),
             encrypted: !!socket._encrypted,
+            serialPorts,
         });
 
         await updateLastConnected(engineRecord.id);

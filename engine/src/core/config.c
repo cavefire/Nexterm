@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 
 #define CONFIG_FILE "config.yaml"
-#define MAX_LINE 512
+#define MAX_LINE 8192
 
 static void trim(char* str) {
     size_t len = strlen(str);
@@ -16,6 +16,9 @@ static void trim(char* str) {
                        str[len - 1] == ' '  || str[len - 1] == '\t')) {
         str[--len] = '\0';
     }
+    size_t start = 0;
+    while (str[start] == ' ' || str[start] == '\t') start++;
+    if (start > 0) memmove(str, str + start, len - start + 1);
 }
 
 static void strip_quotes(char* str) {
@@ -27,12 +30,41 @@ static void strip_quotes(char* str) {
     }
 }
 
+static void parse_serial_ports(nexterm_config_t* cfg, const char* value) {
+    cfg->serial_port_count = 0;
+
+    char buf[MAX_LINE];
+    snprintf(buf, sizeof(buf), "%s", value);
+
+    char* saveptr = NULL;
+    for (char* tok = strtok_r(buf, ",", &saveptr); tok;
+         tok = strtok_r(NULL, ",", &saveptr)) {
+        trim(tok);
+        strip_quotes(tok);
+        if (tok[0] == '\0') continue;
+
+        if (cfg->serial_port_count >= NEXTERM_MAX_SERIAL_PORTS) {
+            LOG_WARN("Too many serial ports configured, ignoring: %s", tok);
+            continue;
+        }
+
+        snprintf(cfg->serial_ports[cfg->serial_port_count],
+                 NEXTERM_SERIAL_PORT_PATH_LEN, "%s", tok);
+        cfg->serial_port_count++;
+    }
+}
+
 static int parse_config_file(nexterm_config_t* cfg) {
     FILE* f = fopen(CONFIG_FILE, "r");
     if (!f) return -1;
 
     char line[MAX_LINE];
     while (fgets(line, sizeof(line), f)) {
+        if (strlen(line) == MAX_LINE - 1 && line[MAX_LINE - 2] != '\n') {
+            LOG_WARN("Config line exceeds %d characters and was truncated", MAX_LINE - 1);
+            int c;
+            while ((c = fgetc(f)) != EOF && c != '\n');
+        }
         trim(line);
         if (line[0] == '\0' || line[0] == '#') continue;
 
@@ -62,6 +94,8 @@ static int parse_config_file(nexterm_config_t* cfg) {
             snprintf(cfg->ca_cert_path, sizeof(cfg->ca_cert_path), "%s", value);
         } else if (strcmp(key, "tls_skip_verify") == 0) {
             cfg->tls_skip_verify = (strcmp(value, "true") == 0 || strcmp(value, "1") == 0);
+        } else if (strcmp(key, "serial_ports") == 0) {
+            parse_serial_ports(cfg, value);
         }
     }
 
@@ -85,13 +119,32 @@ static int write_default_config(const nexterm_config_t* cfg) {
     fprintf(f, "tls: %s\n", cfg->tls ? "true" : "false");
     fprintf(f, "ca_cert_path: \"%s\"\n", cfg->ca_cert_path);
     fprintf(f, "tls_skip_verify: %s\n", cfg->tls_skip_verify ? "true" : "false");
+    fprintf(f, "# Comma-separated list of serial devices that may be opened remotely.\n");
+    fprintf(f, "# Empty means serial console access is disabled.\n");
+    fprintf(f, "serial_ports: \"\"\n");
 
     fclose(f);
     LOG_INFO("Created default config file: %s", CONFIG_FILE);
     return 0;
 }
 
-int nexterm_config_load(nexterm_config_t* cfg) {
+static nexterm_config_t g_config;
+
+const nexterm_config_t* nexterm_config_get(void) {
+    return &g_config;
+}
+
+bool nexterm_config_serial_port_allowed(const char* device) {
+    if (!device || device[0] == '\0') return false;
+    for (int i = 0; i < g_config.serial_port_count; i++) {
+        if (strcmp(g_config.serial_ports[i], device) == 0)
+            return true;
+    }
+    return false;
+}
+
+const nexterm_config_t* nexterm_config_load(void) {
+    nexterm_config_t* cfg = &g_config;
     memset(cfg, 0, sizeof(*cfg));
     snprintf(cfg->server_host, sizeof(cfg->server_host), "%s", "127.0.0.1");
     cfg->server_port = 7800;
@@ -120,5 +173,14 @@ int nexterm_config_load(nexterm_config_t* cfg) {
     if (env_skip && (strcmp(env_skip, "true") == 0 || strcmp(env_skip, "1") == 0))
         cfg->tls_skip_verify = true;
 
-    return 0;
+    const char* env_serial = getenv("SERIAL_PORTS");
+    if (env_serial && env_serial[0] != '\0') {
+        parse_serial_ports(cfg, env_serial);
+        LOG_INFO("Using SERIAL_PORTS from environment variable");
+    }
+
+    if (cfg->serial_port_count > 0)
+        LOG_INFO("Serial console access enabled for %d port(s)", cfg->serial_port_count);
+
+    return cfg;
 }

@@ -155,11 +155,10 @@ int main(int argc, char* argv[]) {
 
     nexterm_log_set_level(parse_log_level(log_level_str));
 
-    nexterm_config_t config;
-    nexterm_config_load(&config);
+    const nexterm_config_t* config = nexterm_config_load();
 
-    const char* server_host = cli_host ? cli_host : config.server_host;
-    uint16_t server_port = cli_port ? cli_port : config.server_port;
+    const char* server_host = cli_host ? cli_host : config->server_host;
+    uint16_t server_port = cli_port ? cli_port : config->server_port;
 
     LOG_INFO("Nexterm Engine v%s starting", NEXTERM_ENGINE_VERSION);
 
@@ -195,10 +194,10 @@ int main(int argc, char* argv[]) {
     nexterm_sm_init(&g_session_manager);
 
     nexterm_control_plane_t* cp = nexterm_cp_create(server_host, server_port,
-                                                     config.registration_token,
-                                                     config.tls,
-                                                     config.ca_cert_path,
-                                                     config.tls_skip_verify);
+                                                     config->registration_token,
+                                                     config->tls,
+                                                     config->ca_cert_path,
+                                                     config->tls_skip_verify);
     if (!cp) {
         LOG_ERROR("Failed to create control plane client");
         return 1;

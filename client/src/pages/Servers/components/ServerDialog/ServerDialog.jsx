@@ -15,7 +15,14 @@ import { getAvailableTabs, validateRequiredFields, getFieldConfig } from "./util
 import Icon from "@mdi/react";
 import * as mdiIcons from "@mdi/js";
 
-const PROTOCOL_DEFAULT_ICONS = { ssh: "mdiConsole", telnet: "mdiConsole", rdp: "mdiMicrosoftWindows", vnc: "mdiMonitor", sftp: "mdiFolderNetwork", ftp: "mdiFolderNetwork", ftps: "mdiFolderNetwork", demo: "mdiFlaskOutline" };
+const PROTOCOL_DEFAULT_ICONS = { ssh: "mdiConsole", telnet: "mdiConsole", serial: "mdiSerialPort", rdp: "mdiMicrosoftWindows", vnc: "mdiMonitor", sftp: "mdiFolderNetwork", ftp: "mdiFolderNetwork", ftps: "mdiFolderNetwork", demo: "mdiFlaskOutline" };
+
+const PROTOCOL_HEADER_ICONS = { ssh: "mdiConsole", telnet: "mdiConsole", serial: "mdiSerialPort", rdp: "mdiMonitor", vnc: "mdiDesktopClassic", sftp: "mdiFolderNetwork", ftp: "mdiFolderNetwork", ftps: "mdiFolderNetwork", demo: "mdiFlaskOutline" };
+
+const getProtocolIcon = (protocol, type) => {
+    if (type?.startsWith('pve')) return "mdiServerNetwork";
+    return PROTOCOL_HEADER_ICONS[protocol] || "mdiServerNetwork";
+};
 
 export const ServerDialog = ({ open, onClose, currentFolderId, currentOrganizationId, editServerId, initialProtocol }) => {
     const { t } = useTranslation();
@@ -23,11 +30,6 @@ export const ServerDialog = ({ open, onClose, currentFolderId, currentOrganizati
     const { loadServers } = useContext(ServerContext);
     const { loadIdentities } = useContext(IdentityContext);
     const { sendToast } = useToast();
-
-    const getProtocolIcon = (protocol, type) => {
-        if (type?.startsWith('pve')) return "mdiServerNetwork";
-        return { ssh: "mdiConsole", telnet: "mdiConsole", rdp: "mdiMonitor", vnc: "mdiDesktopClassic", sftp: "mdiFolderNetwork", ftp: "mdiFolderNetwork", ftps: "mdiFolderNetwork", demo: "mdiFlaskOutline" }[protocol] || "mdiServerNetwork";
-    };
 
     const [name, setName] = useState("");
     const [icon, setIcon] = useState(null);

@@ -79,6 +79,7 @@ set(ENGINE_SOURCES
     src/net/file_proto.c
     src/net/thumbnail.c
     src/net/telnet.c
+    src/net/serial.c
     src/net/http_fetch.c
     src/net/websocket.c
     src/proto/control_plane.c

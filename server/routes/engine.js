@@ -32,6 +32,7 @@ app.get("/", async (req, res) => {
                 version: liveEngine?.version || null,
                 remoteAddr: liveEngine?.remoteAddr || null,
                 encrypted: liveEngine?.encrypted || false,
+                serialPorts: liveEngine?.serialPorts || [],
             };
         });
 

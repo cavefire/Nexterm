@@ -85,7 +85,7 @@ const PERMISSIONS = [
     { id: P.SCRIPTS_MANAGE, scopes: BOTH, category: "resources", default: true, label: "Manage Scripts", description: "Create, edit and delete scripts." },
     { id: P.SCRIPTS_EXECUTE, scopes: BOTH, category: "resources", default: true, label: "Execute Scripts", description: "Run scripts against servers." },
 
-    { id: P.CONNECT_SSH, scopes: BOTH, category: "connections", default: true, label: "Connect via SSH / Telnet", description: "Open terminal sessions to servers." },
+    { id: P.CONNECT_SSH, scopes: BOTH, category: "connections", default: true, label: "Connect via SSH / Telnet / Serial", description: "Open terminal sessions to servers." },
     { id: P.CONNECT_RDP, scopes: BOTH, category: "connections", default: true, label: "Connect via RDP", description: "Open remote desktop sessions to servers." },
     { id: P.CONNECT_VNC, scopes: BOTH, category: "connections", default: true, label: "Connect via VNC", description: "Open VNC sessions to servers." },
     { id: P.CONNECT_PROXMOX, scopes: BOTH, category: "connections", default: true, label: "Connect to Proxmox", description: "Open Proxmox VM, container and shell sessions." },

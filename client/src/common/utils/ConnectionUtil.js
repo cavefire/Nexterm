@@ -43,7 +43,7 @@ export const getBrowserId = () => {
     return id;
 };
 
-const CREDENTIALLESS_PROTOCOLS = ["telnet", "demo"];
+const CREDENTIALLESS_PROTOCOLS = ["telnet", "demo", "serial"];
 
 export const isCredentiallessProtocol = (protocol) => CREDENTIALLESS_PROTOCOLS.includes(protocol);
 

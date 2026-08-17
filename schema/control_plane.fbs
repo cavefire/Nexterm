@@ -40,6 +40,7 @@ enum SessionType : byte {
     Tunnel = 5,
     WebSocket = 6,
     Demo = 7,
+    Serial = 8,
 }
 
 enum ErrorCode : byte {
@@ -54,6 +55,7 @@ enum ErrorCode : byte {
 table EngineHello {
     version: string;
     registration_token: string;
+    serial_ports: [string];
 }
 
 table EngineHelloAck {

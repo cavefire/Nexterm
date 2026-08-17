@@ -8,7 +8,7 @@ const stateBroadcaster = require("./StateBroadcaster");
 const MAX_LOG_BUFFER_SIZE = 200 * 1024;
 const sessions = new Map();
 const shareIndex = new Map();
-const CONTROL_PLANE_TYPES = new Set(["ssh", "sftp", "guac", "pve-lxc"]);
+const CONTROL_PLANE_TYPES = new Set(["ssh", "sftp", "guac", "pve-lxc", "serial"]);
 
 const TYPING_DURATION_MS = 1500;
 const PRESENCE_THROTTLE_MS = 250;
@@ -490,6 +490,18 @@ module.exports.removeAllByAccountId = async (accountId) => {
     for (const id of toRemove) await module.exports.remove(id);
     logger.info(`Removed all sessions for account`, { accountId, count: toRemove.length });
     return toRemove.length;
+};
+
+module.exports.isJoinable = (session) =>
+    !session.configuration?.scriptId && session.configuration?.type !== "sftp";
+
+module.exports.findActiveByEntryId = (entryId) => {
+    const numericId = Number(entryId);
+    for (const session of sessions.values()) {
+        if (session.entryId === numericId && !session._removing
+            && module.exports.isJoinable(session)) return session;
+    }
+    return null;
 };
 
 module.exports.removeAllByEntryId = async (entryId) => {

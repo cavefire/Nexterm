@@ -20,6 +20,7 @@ const SessionManager = require("../lib/SessionManager");
 const PROTOCOL_RENDERERS = {
     ssh: "terminal",
     telnet: "terminal",
+    serial: "terminal",
     rdp: "guac",
     vnc: "guac",
     demo: "guac",

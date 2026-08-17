@@ -130,6 +130,28 @@ volumes:
 docker-compose up -d
 ```
 
+### 🔌 Serial Consoles
+
+Engines can expose serial devices attached to their host (e.g. `/dev/ttyUSB0`) as connectable serial consoles. By default, no serial ports are usable — you have to allow them explicitly in the engine's `config.yaml`:
+
+```yaml
+serial_ports: "/dev/ttyUSB0,/dev/ttyS0"
+```
+
+Alternatively, set the `SERIAL_PORTS` environment variable on the engine. Only the listed devices can be opened; everything else is rejected by the engine.
+
+When running the engine in Docker, the devices also have to be passed through to the container:
+
+```yaml
+services:
+  engine:
+    image: nexterm/engine:latest
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+```
+
+Once the engine reconnects, the allowed ports show up when creating a "Serial Console" entry in the server list.
+
 ### 🌐 IPv6 Support
 
 To connect to IPv6 servers from within the container using bridge networking, add the following to your existing `docker-compose.yml` (not needed for host network):

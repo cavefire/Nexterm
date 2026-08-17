@@ -1447,6 +1447,8 @@
         "encrypted": "Encrypted",
         "unencrypted": "Unencrypted"
       },
+      "serialPorts": "{{count}} serial port",
+      "serialPorts_other": "{{count}} serial ports",
       "tokenLabel": "Registration token for <strong>{{name}}</strong>",
       "tokenHint": "Set this in <code1>config.yaml</code1> or as <code2>REGISTRATION_TOKEN</code2> env variable.",
       "dialog": {
@@ -1554,6 +1556,7 @@
       "new": "New",
       "sshServer": "SSH Server",
       "telnetServer": "Telnet Server",
+      "serialServer": "Serial Console",
       "rdpServer": "RDP Server",
       "vncServer": "VNC Server",
       "demoServer": "Demo Connection",
@@ -1647,7 +1650,9 @@
         "host": "Host",
         "macAddress": "MAC Address",
         "wolBroadcastAddress": "Broadcast Address",
-        "engine": "Engine"
+        "engine": "Engine",
+        "serialDevice": "Serial Device",
+        "baudRate": "Baud Rate"
       },
       "placeholders": {
         "serverName": "Server name",
@@ -1660,6 +1665,8 @@
         "wolBroadcastAddress": "255.255.255.255"
       },
       "engineOffline": "(offline)",
+      "noSerialPorts": "The selected engine has no serial ports configured. Add them via \"serial_ports\" in the engine's config.yaml.",
+      "serialEngineOffline": "The selected engine is offline. Serial ports can only be listed while the engine is connected.",
       "settings": {
         "jumpHosts": {
           "title": "Jump Hosts",

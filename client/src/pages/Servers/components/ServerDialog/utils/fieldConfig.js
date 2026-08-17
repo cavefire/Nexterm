@@ -26,6 +26,18 @@ export const getFieldConfig = (type, protocol) => {
                     showTerminalSettings: true,
                     showWakeOnLan: true,
                 };
+            case "serial":
+                return {
+                    showProtocol: false,
+                    showIpPort: false,
+                    showSerialSettings: true,
+                    showIdentities: false,
+                    showSettings: true,
+                    showMonitoring: false,
+                    showKeyboardLayout: false,
+                    showTerminalSettings: true,
+                    showWakeOnLan: false,
+                };
             case "rdp":
                 return {
                     showProtocol: false,
@@ -159,6 +171,8 @@ export const validateRequiredFields = (type, protocol, name, config) => {
     if (!name) return false;
 
     if (fieldConfig.showIpPort && (!config.ip || !config.port)) return false;
+
+    if (fieldConfig.showSerialSettings && !config.device) return false;
 
     if (fieldConfig.showProtocol && !config.protocol) return false;
 

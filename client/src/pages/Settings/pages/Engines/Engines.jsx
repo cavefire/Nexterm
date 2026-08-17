@@ -24,6 +24,7 @@ import {
     mdiLanConnect,
     mdiLock,
     mdiLockOpenVariantOutline,
+    mdiSerialPort,
 } from "@mdi/js";
 
 export const Engines = () => {
@@ -173,6 +174,12 @@ export const Engines = () => {
                                                         <Icon path={engine.encrypted ? mdiLock : mdiLockOpenVariantOutline} />
                                                         {engine.encrypted ? t("settings.engines.transport.encrypted") : t("settings.engines.transport.unencrypted")}
                                                     </span>
+                                                    {engine.serialPorts?.length > 0 && (
+                                                        <span className="meta-item" title={engine.serialPorts.join(", ")}>
+                                                            <Icon path={mdiSerialPort} />
+                                                            {t("settings.engines.serialPorts", { count: engine.serialPorts.length })}
+                                                        </span>
+                                                    )}
                                                 </>
                                             )}
                                             {!engine.connected && engine.lastConnectedAt && (

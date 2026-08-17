@@ -95,7 +95,7 @@ const openEngineSession = async (sessionId, sessionType, host, port, params, jum
     try {
         openResult = await controlPlane.openSession(sessionId, sessionType, host, port, params, jumpHosts, engineId || null);
     } catch (err) {
-        dataSocketPromise.catch(() => {});
+        dataSocketPromise.then(socket => socket.destroy()).catch(() => {});
         throw err;
     }
     const dataSocket = await dataSocketPromise;
@@ -126,6 +126,7 @@ const createConnectionForSession = async (sessionId, accountId) => {
     switch (protocol) {
         case "ssh": return createSSHConnectionForSession(sessionId, entry, identity, organizationId, script);
         case "telnet": return createTelnetConnectionForSession(sessionId, entry, organizationId);
+        case "serial": return createSerialConnectionForSession(sessionId, entry, organizationId);
         case "pve-lxc":
         case "pve-shell": return createPveLxcConnectionForSession(sessionId, entry, organizationId);
         case "pve-qemu":
@@ -346,6 +347,47 @@ const createTelnetConnectionForSession = async (sessionId, entry, organizationId
     return { success: true };
 }
 
+const createSerialConnectionForSession = async (sessionId, entry, organizationId) => {
+    requireEngine();
+    const session = requireSession(sessionId);
+    const { device, baudRate, dataBits, parity, stopBits, engineId } = entry.config || {};
+
+    if (!device) throw new Error("Missing serial device configuration");
+    if (!engineId) throw new Error("Serial entries must specify an engine");
+
+    const params = { baudRate: String(baudRate || 115200) };
+    if (dataBits) params.dataBits = String(dataBits);
+    if (parity) params.parity = String(parity);
+    if (stopBits) params.stopBits = String(stopBits);
+
+    const { dataSocket } = await openEngineSession(
+        sessionId, SessionType.Serial, device, 0, params, [], engineId
+    );
+
+    await SessionManager.initRecording(sessionId, organizationId);
+
+    dataSocket.on("data", (data) => SessionManager.appendLog(sessionId, data.toString()));
+    dataSocket.on("close", () => {
+        logger.info("Serial data connection closed", { sessionId });
+        SessionManager.remove(sessionId);
+    });
+    dataSocket.on("error", (err) => {
+        logger.error("Serial data socket error", { sessionId, error: err.message });
+        SessionManager.markFailed(sessionId, err.message);
+        SessionManager.remove(sessionId, { code: 4017, reason: err.message });
+    });
+
+    SessionManager.setConnection(sessionId, {
+        dataSocket,
+        sessionId,
+        type: "serial",
+        auditLogId: session.auditLogId,
+    });
+
+    logger.info("Serial connected", { sessionId, device });
+    return { success: true };
+}
+
 const createPveLxcConnectionForSession = async (sessionId, entry, organizationId) => {
     requireEngine();
     const session = requireSession(sessionId);
@@ -496,4 +538,5 @@ module.exports = {
     getSessionPassword,
     buildSSHParams,
     resolveJumpHosts,
+    getEntryProtocol,
 };
