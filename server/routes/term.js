@@ -2,6 +2,7 @@ const wsAuth = require("../middlewares/wsAuth");
 const sshHook = require("../hooks/ssh");
 const pveLxcHook = require("../hooks/pve-lxc");
 const telnetHook = require("../hooks/telnet");
+const hostShellHook = require("../hooks/host-shell");
 const logger = require("../utils/logger");
 const SessionManager = require("../lib/SessionManager");
 
@@ -55,6 +56,7 @@ module.exports = async (ws, req) => {
     try {
         if (protocol === "ssh") await sshHook(ws, { ...context, reuseConnection: true });
         else if (protocol === "telnet" || protocol === "serial") await telnetHook(ws, { ...context, reuseConnection: true });
+        else if (protocol === "host-shell") await hostShellHook(ws, { ...context, reuseConnection: true });
         else if (protocol === "pve-lxc" || protocol === "pve-shell") await pveLxcHook(ws, { ...context, reuseConnection: true });
         else ws.close(4009, `Unsupported: ${entry.type}`);
     } catch (err) {

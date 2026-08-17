@@ -397,6 +397,10 @@ module.exports.listEntries = async (accountId) => {
             return { ...obj, integrationId: entry.integrationId };
         }
 
+        if (entry.type === 'host-shell') {
+            return { ...obj, os: entry.config?.os };
+        }
+
         return obj;
     };
 

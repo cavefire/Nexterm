@@ -50,6 +50,7 @@ export const isCredentiallessProtocol = (protocol) => CREDENTIALLESS_PROTOCOLS.i
 export const requiresIdentity = (server) => {
     if (!server) return false;
     if (server.type?.startsWith("pve-")) return false;
+    if (server.type === "host-shell") return false;
     return !isCredentiallessProtocol(server.protocol);
 };
 

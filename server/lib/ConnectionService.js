@@ -14,6 +14,7 @@ const { SessionType } = require("./generated/control_plane_generated");
 const controlPlane = require("./controlPlane/ControlPlaneServer");
 const { isRecordingEnabled } = require("../utils/recordingService");
 const EngineSftpClient = require("./EngineSftpClient");
+const hostShellRegistry = require("./HostShellRegistry");
 const { buildPveQemuParams, buildRdpParams, buildVncParams, buildDemoParams } = require("./guacParamBuilders");
 
 const GUAC_PROTOCOLS = {
@@ -127,6 +128,7 @@ const createConnectionForSession = async (sessionId, accountId) => {
         case "ssh": return createSSHConnectionForSession(sessionId, entry, identity, organizationId, script);
         case "telnet": return createTelnetConnectionForSession(sessionId, entry, organizationId);
         case "serial": return createSerialConnectionForSession(sessionId, entry, organizationId);
+        case "host-shell": return createHostShellConnectionForSession(sessionId, entry, organizationId, accountId);
         case "pve-lxc":
         case "pve-shell": return createPveLxcConnectionForSession(sessionId, entry, organizationId);
         case "pve-qemu":
@@ -385,6 +387,37 @@ const createSerialConnectionForSession = async (sessionId, entry, organizationId
     });
 
     logger.info("Serial connected", { sessionId, device });
+    return { success: true };
+}
+
+const createHostShellConnectionForSession = async (sessionId, entry, organizationId, accountId) => {
+    const session = requireSession(sessionId);
+    const deviceId = entry.config?.deviceId;
+    if (!deviceId) throw new Error("Host shell entry is missing its device id");
+
+    const dataSocket = await hostShellRegistry.requestShell(accountId, deviceId, sessionId);
+
+    dataSocket.on("data", (data) => SessionManager.appendLog(sessionId, data.toString()));
+    dataSocket.on("close", () => {
+        logger.info("Host shell data connection closed", { sessionId });
+        SessionManager.remove(sessionId);
+    });
+    dataSocket.on("error", (err) => {
+        logger.error("Host shell data socket error", { sessionId, error: err.message });
+        SessionManager.markFailed(sessionId, err.message);
+        SessionManager.remove(sessionId, { code: 4017, reason: err.message });
+    });
+
+    await SessionManager.initRecording(sessionId, organizationId);
+
+    SessionManager.setConnection(sessionId, {
+        dataSocket,
+        sessionId,
+        type: "host-shell",
+        auditLogId: session.auditLogId,
+    });
+
+    logger.info("Host shell connected", { sessionId, deviceId });
     return { success: true };
 }
 

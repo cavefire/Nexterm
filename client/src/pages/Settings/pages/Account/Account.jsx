@@ -1,6 +1,8 @@
 import IconInput from "@/common/components/IconInput";
 import "./styles.sass";
-import { mdiAccountCircleOutline, mdiAccountEdit, mdiCameraOutline, mdiClose, mdiShieldCheck, mdiLockReset, mdiTranslate, mdiSync, mdiCloudSync, mdiCloudOffOutline, mdiWeb, mdiTabUnselected, mdiFingerprint, mdiKeyVariant, mdiPencil, mdiTrashCan, mdiPlus, mdiApi } from "@mdi/js";
+import { mdiAccountCircleOutline, mdiAccountEdit, mdiCameraOutline, mdiClose, mdiShieldCheck, mdiLockReset, mdiTranslate, mdiSync, mdiCloudSync, mdiCloudOffOutline, mdiWeb, mdiTabUnselected, mdiFingerprint, mdiKeyVariant, mdiPencil, mdiTrashCan, mdiPlus, mdiApi, mdiLaptop } from "@mdi/js";
+import ToggleSwitch from "@/common/components/ToggleSwitch";
+import { isHostShellSupported, isHostShellEnabled, getDeviceName, setDeviceName as persistDeviceName, applyHostShell } from "@/common/utils/HostShellProvider.js";
 import { useContext, useEffect, useRef, useState } from "react";
 import LetterAvatar from "@/common/components/LetterAvatar";
 import { createSquareAvatar, MAX_AVATAR_INPUT_SIZE } from "@/common/utils/imageUtils.js";
@@ -39,6 +41,25 @@ export const Account = () => {
     const [apiKeyToDelete, setApiKeyToDelete] = useState(null);
 
     const { user, login, sessionToken } = useContext(UserContext);
+
+    const [exposeShell, setExposeShell] = useState(isHostShellEnabled());
+    const [deviceName, setDeviceNameState] = useState(getDeviceName());
+
+    const toggleExposeShell = async (next) => {
+        setExposeShell(next);
+        try {
+            await applyHostShell(sessionToken, next);
+            sendToast(t("common.success"), next ? t("settings.account.exposeShell.enabled") : t("settings.account.exposeShell.disabled"));
+        } catch (err) {
+            setExposeShell(!next);
+            sendToast(t("common.error"), err?.toString() || t("settings.account.exposeShell.failed"));
+        }
+    };
+
+    const changeDeviceName = (value) => {
+        setDeviceNameState(value);
+        persistDeviceName(value);
+    };
     const { isGroupSynced, toggleGroupSync, language, setLanguage } = usePreferences();
     const { sendToast } = useToast();
 
@@ -312,6 +333,20 @@ export const Account = () => {
                     {user?.totpEnabled ? <Button text={t("settings.account.disable2FA")} onClick={disable2FA} /> : null}
                 </div>
             </div>
+
+            {isHostShellSupported() && (
+                <div className="account-section">
+                    <div className="section-header">
+                        <h2><Icon path={mdiLaptop} size={0.8} style={{marginRight: '8px'}} />{t("settings.account.exposeShell.title")}</h2>
+                        <ToggleSwitch id="expose-shell" checked={exposeShell} onChange={toggleExposeShell} />
+                    </div>
+                    <div className="section-inner">
+                        <p style={{ maxWidth: "25rem" }}>{t("settings.account.exposeShell.description")}</p>
+                        <IconInput icon={mdiLaptop} value={deviceName} setValue={changeDeviceName}
+                                   placeholder={t("settings.account.exposeShell.namePlaceholder")} />
+                    </div>
+                </div>
+            )}
 
             <div className="account-section">
                 <h2><Icon path={mdiLockReset} size={0.8} style={{marginRight: '8px'}} />{t("settings.account.changePassword")}</h2>

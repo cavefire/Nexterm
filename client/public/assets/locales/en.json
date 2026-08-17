@@ -631,6 +631,14 @@
       "changePassword": "Change password",
       "changePasswordDescription": "Choose a new and secure password for your account here.",
       "changePasswordButton": "Change password",
+      "exposeShell": {
+        "title": "Expose this device's shell",
+        "description": "Allow yourself to open a terminal to this PC from the web or your other devices. Only your own account can connect. Disabled by default.",
+        "namePlaceholder": "Device name (e.g. My Laptop)",
+        "enabled": "This device's shell is now exposed",
+        "disabled": "This device's shell is no longer exposed",
+        "failed": "Failed to change shell exposure"
+      },
       "language": "Language",
       "languageDescription": "Select your preferred language for the interface.",
       "currentLanguage": "Current Language",

@@ -74,6 +74,8 @@ app.ws("/api/ws/sftp", require("./routes/sftpWS"));
 app.ws("/api/ws/ai", require("./routes/aiWS"));
 app.ws("/api/ws/tunnel", require("./routes/tunnel"));
 app.ws("/api/ws/state", require("./routes/state"));
+app.ws("/api/ws/host-shell/provider", require("./routes/hostShellProvider"));
+app.ws("/api/ws/host-shell/data", require("./routes/hostShellData"));
 
 app.use("/api/entries/sftp", require("./routes/sftp"));
 
@@ -131,6 +133,8 @@ db.authenticate()
         await migrationRunner.runMigrations();
 
         await ensureInternalProvider();
+
+        await require("./lib/HostShellRegistry").markAllOffline();
 
         startStatusChecker();
 

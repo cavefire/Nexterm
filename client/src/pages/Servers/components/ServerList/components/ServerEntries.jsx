@@ -35,7 +35,7 @@ const ServerEntries = ({ entries, nestedLevel, setRenameStateId, connectToServer
                             hibernatedSessions={hibernatedSessions}
                         />
                     );
-                } else if (entry.type === "server" || entry.type.startsWith("pve-")) {
+                } else if (entry.type === "server" || entry.type.startsWith("pve-") || entry.type === "host-shell") {
                     const hibernatedCount = hibernatedSessions.filter(s => s.server.id === entry.id).length;
                     return (
                         <ServerObject

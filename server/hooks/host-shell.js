@@ -1,0 +1,59 @@
+const { updateAuditLogWithSessionDuration } = require("../controllers/audit");
+const SessionManager = require("../lib/SessionManager");
+const { parseResizeMessage } = require("../utils/sshEventHandlers");
+const { translateKeys } = require("../utils/keyTranslation");
+const { buildParticipant, createWriteGuard } = require("../utils/sessionParticipant");
+
+const bindHandlers = (ws, conn, sessionId, config, isShared, canWrite) => {
+    const { dataSocket } = conn;
+
+    const msgHandler = (data) => {
+        if (isShared && !canWrite()) return;
+        const resize = parseResizeMessage(data.toString());
+        if (resize) {
+            if (SessionManager.isActiveWs(sessionId, ws)) {
+                dataSocket.resize(resize.width, resize.height);
+                SessionManager.recordResize(sessionId, resize.width, resize.height);
+            }
+            return;
+        }
+        SessionManager.setActiveWs(sessionId, ws);
+        SessionManager.markTyping(sessionId, ws);
+        dataSocket.write(translateKeys(data, config));
+    };
+    ws.on("message", msgHandler);
+
+    const dataHandler = (data) => ws.readyState === ws.OPEN && ws.send(data.toString());
+    dataSocket.on("data", dataHandler);
+
+    return { msgHandler, dataHandler };
+};
+
+module.exports = async (ws, ctx) => {
+    const { serverSession, entry, isShared } = ctx;
+    if (!serverSession) return ws.close(4007, "Session required");
+
+    const sessionId = serverSession.sessionId;
+    const conn = SessionManager.getConnection(sessionId);
+
+    if (!conn?.dataSocket) return ws.close(4014, "Session not connected");
+
+    const startTime = Date.now();
+
+    const logs = SessionManager.getLogBuffer(sessionId);
+    if (logs && ws.readyState === ws.OPEN) ws.send(logs);
+
+    const canWrite = createWriteGuard(ctx, sessionId);
+
+    SessionManager.addWebSocket(sessionId, ws, isShared, buildParticipant(ctx));
+    if (!isShared || canWrite()) SessionManager.setActiveWs(sessionId, ws);
+
+    const { msgHandler, dataHandler } = bindHandlers(ws, conn, sessionId, entry?.config, isShared, canWrite);
+
+    ws.on("close", async () => {
+        conn.dataSocket.removeListener("data", dataHandler);
+        ws.removeListener("message", msgHandler);
+        SessionManager.removeWebSocket(sessionId, ws, isShared);
+        if (!isShared) await updateAuditLogWithSessionDuration(conn.auditLogId, startTime);
+    });
+};

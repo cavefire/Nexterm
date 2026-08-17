@@ -114,6 +114,12 @@ export const UserProvider = ({ children }) => {
         sessionToken ? login() : checkFirstTimeSetup();
     }, [sessionToken]);
 
+    useEffect(() => {
+        if (isConnectorMode && user && sessionToken) {
+            import("@/common/utils/HostShellProvider.js").then(m => m.syncHostShell(sessionToken)).catch(() => {});
+        }
+    }, [isConnectorMode, user, sessionToken]);
+
     return (
         <UserContext.Provider value={{ updateSessionToken, user, sessionToken, firstTimeSetup, login, logout, overrideToken, hasPermission, isConnectorMode, addingServer, setAddingServer }}>
             {isConnectorMode ? (

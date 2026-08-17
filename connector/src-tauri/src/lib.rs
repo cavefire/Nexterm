@@ -8,6 +8,9 @@ use tunnel::{TunnelConfig, TunnelManager, TunnelStatus};
 mod host_fs;
 use host_fs::HostFsState;
 
+mod host_shell;
+use host_shell::{HostShellConfig, HostShellManager};
+
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[tauri::command]
@@ -121,6 +124,30 @@ async fn get_tunnel_status(
     Ok(state.get_tunnel_status(&id).await)
 }
 
+#[tauri::command]
+async fn set_host_shell(
+    state: tauri::State<'_, Arc<HostShellManager>>,
+    enabled: bool,
+    server_url: String,
+    token: String,
+    device_id: String,
+    device_name: String,
+) -> Result<bool, String> {
+    if enabled {
+        state.start(HostShellConfig { server_url, token, device_id, device_name }).await?;
+    } else {
+        state.stop().await;
+    }
+    Ok(enabled)
+}
+
+#[tauri::command]
+async fn host_shell_running(
+    state: tauri::State<'_, Arc<HostShellManager>>,
+) -> Result<bool, String> {
+    Ok(state.is_running().await)
+}
+
 pub mod urlencoding {
     pub fn encode(s: &str) -> String {
         url::form_urlencoded::byte_serialize(s.as_bytes()).collect()
@@ -131,6 +158,7 @@ pub mod urlencoding {
 pub fn run() {
     let tunnel_manager = Arc::new(TunnelManager::new());
     let host_fs = HostFsState::default();
+    let host_shell_manager = Arc::new(HostShellManager::new());
 
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -140,6 +168,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(tunnel_manager)
         .manage(host_fs)
+        .manage(host_shell_manager)
         .invoke_handler(tauri::generate_handler![
             open_popout,
             open_tunnel_window,
@@ -148,6 +177,8 @@ pub fn run() {
             stop_tunnel,
             list_tunnels,
             get_tunnel_status,
+            set_host_shell,
+            host_shell_running,
             get_user_agent,
             host_fs::host_fs_open,
             host_fs::host_fs_read,

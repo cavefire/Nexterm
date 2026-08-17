@@ -2,7 +2,7 @@ const Identity = require('../models/Identity');
 const EntryIdentity = require('../models/EntryIdentity');
 const { listIdentities } = require('../controllers/identity');
 
-const CREDENTIALLESS_PROTOCOLS = ['telnet', 'demo', 'serial'];
+const CREDENTIALLESS_PROTOCOLS = ['telnet', 'demo', 'serial', 'host-shell'];
 
 const resolveIdentity = async (entry, identityId, directIdentity = null, accountId = null) => {
     const protocol = entry.type === 'server' ? entry.config?.protocol : entry.type;
