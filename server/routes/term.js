@@ -34,6 +34,13 @@ module.exports = async (ws, req) => {
             }
             return telnetHook(ws, context);
         }
+        if (protocol === "host-shell") {
+            if (serverSession) {
+                const { conn } = await waitForConnection(serverSession.sessionId);
+                if (!conn) return ws.close(4014, "Connection not available");
+            }
+            return hostShellHook(ws, context);
+        }
         if (protocol === "pve-lxc" || protocol === "pve-shell") return pveLxcHook(ws, context);
         return ws.close(4015, "Sharing not supported");
     }
