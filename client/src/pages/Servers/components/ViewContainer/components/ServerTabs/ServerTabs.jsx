@@ -4,6 +4,7 @@ import Icon from "@mdi/react";
 import { mdiClose, mdiViewSplitVertical, mdiChevronLeft, mdiChevronRight, mdiSleep, mdiOpenInNew, mdiShareVariant, mdiLinkVariant, mdiPencil, mdiEye, mdiCloseCircle, mdiContentDuplicate, mdiNoteEditOutline } from "@mdi/js";
 import { useDrag, useDrop } from "react-dnd";
 import TerminalActionsMenu from "../TerminalActionsMenu";
+import { ShareLinkDialog } from "./components/ShareLinkDialog";
 import { ContextMenu, ContextMenuItem, ContextMenuSeparator, useContextMenu } from "@/common/components/ContextMenu";
 import { useActiveSessions } from "@/common/contexts/SessionContext.jsx";
 import { useLiveSessions } from "@/common/contexts/LiveSessionContext.jsx";
@@ -45,22 +46,30 @@ const DraggableTab = ({
     const canOpenNotes = !isNotes && !isJoined && !!server?.id && !session.scriptId;
     const isSharing = !!session.shareId;
 
+    const [manualShareLink, setManualShareLink] = useState(null);
+
+    const copyShareLink = useCallback(async (shareId) => {
+        const baseUrl = getBaseUrl() || window.location.origin;
+        const link = `${baseUrl}/share/${shareId}`;
+        try {
+            await navigator.clipboard.writeText(link);
+        } catch {
+            setManualShareLink(link);
+        }
+    }, []);
+
     const handleShare = useCallback(async (writable) => {
         const result = await postRequest(`connections/${session.id}/share`, { writable });
-        if (result?.shareId) {
-            const baseUrl = getBaseUrl() || window.location.origin;
-            navigator.clipboard.writeText(`${baseUrl}/share/${result.shareId}`);
-        }
-    }, [session.id]);
+        if (result?.shareId) copyShareLink(result.shareId);
+    }, [session.id, copyShareLink]);
 
     const handleStopSharing = useCallback(async () => {
         await deleteRequest(`connections/${session.id}/share`);
     }, [session.id]);
 
     const handleCopyLink = useCallback(() => {
-        const baseUrl = getBaseUrl() || window.location.origin;
-        navigator.clipboard.writeText(`${baseUrl}/share/${session.shareId}`);
-    }, [session.shareId]);
+        copyShareLink(session.shareId);
+    }, [session.shareId, copyShareLink]);
 
     const handlePermissionChange = useCallback(async (writable) => {
         await patchRequest(`connections/${session.id}/share`, { writable });
@@ -206,6 +215,8 @@ const DraggableTab = ({
                     danger
                 />
             </ContextMenu>
+            <ShareLinkDialog open={!!manualShareLink} link={manualShareLink}
+                             onClose={() => setManualShareLink(null)} />
         </>
     );
 };

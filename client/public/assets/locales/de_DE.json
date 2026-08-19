@@ -1608,6 +1608,10 @@
         "openNotes": "Offene Noten",
         "hibernateSession": "Ruhezustand aktivieren",
         "closeSession": "Trennen"
+      },
+      "shareLinkDialog": {
+        "title": "Link zum Teilen",
+        "description": "Der Link konnte nicht automatisch in die Zwischenablage kopiert werden. Kopiere ihn unten manuell."
       }
     },
     "wol": {

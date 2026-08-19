@@ -1619,6 +1619,10 @@
         "openNotes": "Open Notes",
         "hibernateSession": "Hibernate",
         "closeSession": "Disconnect"
+      },
+      "shareLinkDialog": {
+        "title": "Share Link",
+        "description": "The link could not be copied to the clipboard automatically. Copy it manually below."
       }
     },
     "wol": {
