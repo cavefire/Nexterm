@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@ai-sdk/anthropic@^4.0.37":
-  version "4.0.37"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/anthropic/-/anthropic-4.0.37.tgz#38eead043618c9f7f577faed3bf57aad4fe13bd7"
-  integrity sha512-3JVFoPkuVyW/TkUrsNpugQDwJa5RUnExK/J3LKhKece+qFv7MRR33URvmLbND/5yg2qXZ9rf+Wf97adGMltn0g==
+"@ai-sdk/anthropic@^4.0.39":
+  version "4.0.39"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/anthropic/-/anthropic-4.0.39.tgz#d05b2d8f6eae12eb0541c54a9e5a23a9a7241ce4"
+  integrity sha512-JAMGtYeEuaBzqbsPO4fkho6vQyNoVhsHASM4o59wmJRU6Vh7prjOp490Kmc7YQTY+ioU1/xYzXvWOtxZBup0Xw==
   dependencies:
     "@ai-sdk/provider" "4.0.7"
-    "@ai-sdk/provider-utils" "5.0.26"
+    "@ai-sdk/provider-utils" "5.0.27"
 
 "@ai-sdk/gateway@4.0.52":
   version "4.0.52"
@@ -19,32 +19,21 @@
     "@ai-sdk/provider-utils" "5.0.27"
     "@vercel/oidc" "3.2.0"
 
-"@ai-sdk/openai-compatible@^3.0.29":
-  version "3.0.29"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/openai-compatible/-/openai-compatible-3.0.29.tgz#c03e623c973b3ee1612cc208f3f8ff9e5a61ab5c"
-  integrity sha512-mkTkrdpfkV93ihTV3cRIhLpYxQ+cXzBGnrGXXfuQj4wfesCZxYbbyPnCsxYv1ssDt7pGDnrz8RQmpeOqDlAy0g==
-  dependencies:
-    "@ai-sdk/provider" "4.0.7"
-    "@ai-sdk/provider-utils" "5.0.26"
-
-"@ai-sdk/openai@^4.0.41":
-  version "4.0.41"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-4.0.41.tgz#34c6a7eedea57fbfc5067b0ef378615fe9839120"
-  integrity sha512-+WoY0JyF/uV2z+rye7I+hYaVg+hTanG4rYIgsWKvJFDXaAdu9yg07x+BRa2vTgUqzLIBXEBp5d1T7DwMI9ZGlw==
+"@ai-sdk/openai-compatible@^3.0.30":
+  version "3.0.30"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/openai-compatible/-/openai-compatible-3.0.30.tgz#6f19345d6cc548c6f950aed5e72169e5f7d2157e"
+  integrity sha512-BB35G4fS/Ey5OHbWrVLxRLX1gkTlO+9I4YhlmdH1skNVoPaFXZlR6bQ+1C76d/ug7O6ocbIw4qcd2G4+GPdWEA==
   dependencies:
     "@ai-sdk/provider" "4.0.7"
     "@ai-sdk/provider-utils" "5.0.27"
 
-"@ai-sdk/provider-utils@5.0.26":
-  version "5.0.26"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/provider-utils/-/provider-utils-5.0.26.tgz#a318a7872e994774b60ae15196c05e97c4d6baed"
-  integrity sha512-0mqhqx+Dcv+msI84+zkbLXmnCHb/mpkYJ9DU3HBvB1px+UjFQss4lLZqRCSzJ0w3NxwQk4Ishk7cP0r8wEQD5w==
+"@ai-sdk/openai@^4.0.42":
+  version "4.0.42"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/openai/-/openai-4.0.42.tgz#7f8867d14355139587c222bf90562b11f2d78fd4"
+  integrity sha512-ZxDca6jJalYuXrIGVrw6dnkpz1Io9AWy+/b/wVWIbjigHCbd+zWLpPi8NnK0OFU+U3YCpP+KWfUvEnG5pFhltA==
   dependencies:
     "@ai-sdk/provider" "4.0.7"
-    "@standard-schema/spec" "^1.1.0"
-    "@workflow/serde" "4.1.0"
-    eventsource-parser "^3.0.8"
-    undici "^7.28.0"
+    "@ai-sdk/provider-utils" "5.0.27"
 
 "@ai-sdk/provider-utils@5.0.27":
   version "5.0.27"
@@ -1360,10 +1349,10 @@ agent-base@^7.1.0, agent-base@^7.1.2:
   resolved "https://registry.yarnpkg.com/agent-base/-/agent-base-7.1.4.tgz#e3cd76d4c548ee895d3c3fd8dc1f6c5b9032e7a8"
   integrity sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==
 
-ai@^7.0.65:
-  version "7.0.65"
-  resolved "https://registry.yarnpkg.com/ai/-/ai-7.0.65.tgz#a82bd28b4d74062d496f82614b462c621c75be8c"
-  integrity sha512-Uzom971mOHETL9tbeCWDEgbAA/Banj0KnR2obNEWPEUlGnAv2NJjFIxrUZ6F0XxHFDgGVVpnz86BB2CPOZZ83g==
+ai@^7.0.66:
+  version "7.0.66"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-7.0.66.tgz#4d80bbf66089b9dd6c3338e808e204b2e55f8c67"
+  integrity sha512-wBUyoCYF3GVr+62nelBgR8YbpTSsMZrzFyOOjiwijylNSM2TFCW35C+Pml2vc59/WLMpyhS/LWZ55M+B9DAcSg==
   dependencies:
     "@ai-sdk/gateway" "4.0.52"
     "@ai-sdk/provider" "4.0.7"
@@ -1866,10 +1855,10 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
 
-concurrently@^10.0.4:
-  version "10.0.4"
-  resolved "https://registry.yarnpkg.com/concurrently/-/concurrently-10.0.4.tgz#68ee55d60cbc3fee705958508fd5905acfc7514a"
-  integrity sha512-trZql+7l/0+WRAsAnEdctr4+iiOS6ZrViI6H8QWcCF9MFS/LT0dKpe8vluB1to6it+OxSI4VospFTIFMW8DJRw==
+concurrently@^10.0.5:
+  version "10.0.5"
+  resolved "https://registry.yarnpkg.com/concurrently/-/concurrently-10.0.5.tgz#5dd22464ad37f77136a02f4d0f05ddd912fe5c80"
+  integrity sha512-JaP/CoftUrCcAFW/g//RbgEGwlelnEae6cfBLgH6ZdO6s8jPkn6p9SB9u6pdVxYXoiSnFqseOlHfrEfF82TVOg==
   dependencies:
     chalk "5.6.2"
     rxjs "7.8.2"
@@ -2932,10 +2921,10 @@ jose@^6.2.8:
   resolved "https://registry.yarnpkg.com/jose/-/jose-6.2.9.tgz#344fa11af928f8000a4f81972c4d567d587170f0"
   integrity sha512-XrchZOFZUl/T3vTwRe8XK+cJrGtMF4th1ARnDfwbBXFKThGhlsxEE4Zu03AD/bjJSt/9jT/mxrOCkJWOg77aPA==
 
-js-yaml@^5.2.3:
-  version "5.2.3"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-5.2.3.tgz#0942ae8f507e22eb0e54624871789cd477106e54"
-  integrity sha512-n+mUVyUX5bVv7G/G2zyIHOhdxfuU1dY2NOFzTQUWiMUbFss8b57NFlgCCaggU78wSw5KVS9cllzeLyzyR+n5nw==
+js-yaml@^5.3.0:
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-5.3.0.tgz#526430a6da31065127528ae695ce168cfc5f91f0"
+  integrity sha512-muutsYr+e2+d3rTgUGslq5rxbBlUy3cJ61IsHag2QNDQV+7zXWjkUpmALIajhrlLlrgRUiymj6U3zUr/TMK84Q==
   dependencies:
     argparse "^2.0.1"
 
