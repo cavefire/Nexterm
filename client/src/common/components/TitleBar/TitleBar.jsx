@@ -3,14 +3,21 @@ import Icon from "@mdi/react";
 import { mdiWindowMinimize, mdiWindowMaximize, mdiWindowClose, mdiWindowRestore } from "@mdi/js";
 import { useEffect, useState } from "react";
 import NextermLogo from "@/common/components/NextermLogo";
-import { isTauri } from "@/common/utils/TauriUtil.js";
+import { isTauri, isNativeTitleBar } from "@/common/utils/TauriUtil.js";
 import { useTauriWindow } from "@/common/hooks/useTauriWindow.js";
 
 export const TitleBar = ({ title = "Nexterm Connector", hideMaximize = false, showTabs = false }) => {
     const [isMaximized, setIsMaximized] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [isFocused, setIsFocused] = useState(true);
+    const [nativeMode, setNativeMode] = useState(isNativeTitleBar());
     const appWindow = useTauriWindow();
+
+    useEffect(() => {
+        const handler = () => setNativeMode(isNativeTitleBar());
+        window.addEventListener("nexterm:titlebar-mode", handler);
+        return () => window.removeEventListener("nexterm:titlebar-mode", handler);
+    }, []);
 
     useEffect(() => {
         if (!appWindow) return;
@@ -41,7 +48,7 @@ export const TitleBar = ({ title = "Nexterm Connector", hideMaximize = false, sh
         };
     }, [appWindow]);
 
-    if (!isTauri()) return null;
+    if (!isTauri() || nativeMode) return null;
 
     const handleMinimize = () => appWindow?.minimize();
     const handleMaximize = () => {

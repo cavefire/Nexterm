@@ -38,6 +38,28 @@ export const getTitleBarHeight = () => {
     return parseInt(value) || 0;
 };
 
+const NATIVE_TITLE_BAR_KEY = "nexterm_native_titlebar";
+
+export const isNativeTitleBar = () => isTauri() && localStorage.getItem(NATIVE_TITLE_BAR_KEY) === "true";
+
+export const applyNativeTitleBar = async () => {
+    if (!isTauri()) return;
+    const native = localStorage.getItem(NATIVE_TITLE_BAR_KEY) === "true";
+    document.body.classList.toggle("native-title-bar", native);
+    try {
+        const { getCurrentWindow } = await import("@tauri-apps/api/window");
+        await getCurrentWindow().setDecorations(native);
+    } catch (e) {
+        console.warn("Failed to apply title bar mode:", e);
+    }
+};
+
+export const setNativeTitleBar = async (enabled) => {
+    localStorage.setItem(NATIVE_TITLE_BAR_KEY, enabled ? "true" : "false");
+    await applyNativeTitleBar();
+    window.dispatchEvent(new Event("nexterm:titlebar-mode"));
+};
+
 export const getActiveServerUrl = () => localStorage.getItem("nexterm_server_url");
 
 export const setActiveServerUrl = (url) => {
@@ -60,4 +82,4 @@ export const openExternalUrl = async (url) => {
     }
 };
 
-waitForTauri();
+waitForTauri().then((ok) => { if (ok) applyNativeTitleBar(); });

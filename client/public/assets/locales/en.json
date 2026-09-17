@@ -631,6 +631,10 @@
       "changePassword": "Change password",
       "changePasswordDescription": "Choose a new and secure password for your account here.",
       "changePasswordButton": "Change password",
+      "nativeTitleBar": {
+        "title": "Native title bar",
+        "description": "Use the operating system's window frame and title bar instead of the built-in one."
+      },
       "exposeShell": {
         "title": "Expose this device's shell",
         "description": "Allow yourself to open a terminal to this PC from the web or your other devices. Only your own account can connect. Disabled by default.",

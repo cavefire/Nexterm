@@ -61,7 +61,11 @@ export const ViewContainer = ({
     const { t } = useTranslation();
 
     useEffect(() => {
-        setTitleBarTabsSlot(document.getElementById("titlebar-tabs-slot"));
+        const query = () => setTitleBarTabsSlot(document.getElementById("titlebar-tabs-slot"));
+        query();
+        const handler = () => setTimeout(query, 0);
+        window.addEventListener("nexterm:titlebar-mode", handler);
+        return () => window.removeEventListener("nexterm:titlebar-mode", handler);
     }, []);
 
     useBodyClass("session-fullscreen", fullscreenMode);

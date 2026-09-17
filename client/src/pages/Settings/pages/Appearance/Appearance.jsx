@@ -12,11 +12,13 @@ import { applyActiveThemeCSS, removeActiveThemeCSS } from "@/common/components/T
 import Icon from "@mdi/react";
 import {
     mdiPalette, mdiWhiteBalanceSunny, mdiWeatherNight, mdiCheck, mdiCloudSync,
-    mdiCloudOffOutline, mdiPlus, mdiBrush,
+    mdiCloudOffOutline, mdiPlus, mdiBrush, mdiDockWindow,
 } from "@mdi/js";
 import ThemeCard from "./components/ThemeCard";
 import ThemeEditorDialog from "./components/ThemeEditorDialog";
 import Tooltip from "@/common/components/Tooltip";
+import ToggleSwitch from "@/common/components/ToggleSwitch";
+import { isTauri, isNativeTitleBar, setNativeTitleBar } from "@/common/utils/TauriUtil.js";
 
 export const Appearance = () => {
     const { t } = useTranslation();
@@ -37,6 +39,13 @@ export const Appearance = () => {
 
     const [darkClickCount, setDarkClickCount] = useState(0);
     const darkClickTimeout = useRef(null);
+
+    const [nativeTitleBar, setNativeTitleBarState] = useState(isNativeTitleBar());
+
+    const handleNativeTitleBarToggle = async (checked) => {
+        setNativeTitleBarState(checked);
+        await setNativeTitleBar(checked);
+    };
 
     const [themes, setThemes] = useState([]);
     const [activeThemeId, setActiveThemeId] = useState(null);
@@ -234,6 +243,21 @@ export const Appearance = () => {
                     </div>
                 </div>
             </div>
+
+            {isTauri() && (
+                <div className="appearance-section">
+                    <div className="section-header">
+                        <div className="header-content">
+                            <h2>
+                                <Icon path={mdiDockWindow} size={0.8} />
+                                {t("settings.account.nativeTitleBar.title")}
+                            </h2>
+                            <p>{t("settings.account.nativeTitleBar.description")}</p>
+                        </div>
+                        <ToggleSwitch id="native-title-bar" checked={nativeTitleBar} onChange={handleNativeTitleBarToggle} />
+                    </div>
+                </div>
+            )}
 
             <div className="appearance-section">
                 <div className="section-header">
